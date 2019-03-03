@@ -2,8 +2,8 @@
 
 ## Student data
 
-Name: 'Your real name'  
-ID: 'Your ID number'
+Name: Evgeny Ostrovsky
+ID: 309518561
 
 ## News and Changes
 
