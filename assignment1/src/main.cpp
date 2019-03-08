@@ -40,12 +40,46 @@ std::set<int> selected_faces;
 int selected_v = -1;
 void update_display(igl::opengl::glfw::Viewer& viewer);
 
+void printVectorOfVectors(std::vector<std::vector<int>> VF) {
+	int i = -1;
+	for (auto vector1 : VF) {
+		printf("%d:", ++i);
+		for (auto vector2 : vector1) {
+			printf(" %d", vector2);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
+
 bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifiers)
 {
 	if (key == '1')
 	{
-		//add your code for computing vertex to face relations here
-		//store in VF,VFi
+		std::vector<std::vector<int>> VF;
+		std::vector<std::vector<int>> VFi;
+
+		std::vector<std::vector<int>> A;
+
+		Eigen::IOFormat fmt;
+
+		printf("V:\n");
+		Eigen::internal::print_matrix(std::cout, V, fmt);
+		printf("\n\n");
+
+		printf("F:\n");
+		Eigen::internal::print_matrix(std::cout, F, fmt);
+		printf("\n\n");
+
+		igl::vertex_triangle_adjacency(V, F, VF, VFi);
+
+		printf("Adjacency List: Vertex/Faces\n");
+		printVectorOfVectors(VF);
+
+		igl::adjacency_list(F, A);
+
+		printf("Adjacency List: Vertex/Vertex\n");
+		printVectorOfVectors(A);
 	}
 
 	if (key == '2')
