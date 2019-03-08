@@ -40,6 +40,7 @@ std::set<int> selected_faces;
 int selected_v = -1;
 void update_display(igl::opengl::glfw::Viewer& viewer);
 
+// Prints all values of vectors of vectors
 void printVectorOfVectors(std::vector<std::vector<int>> VF) {
 	int i = -1;
 	for (auto vector1 : VF) {
@@ -54,13 +55,8 @@ void printVectorOfVectors(std::vector<std::vector<int>> VF) {
 
 bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifiers)
 {
-	if (key == '1')
+	if (key == '0')
 	{
-		std::vector<std::vector<int>> VF;
-		std::vector<std::vector<int>> VFi;
-
-		std::vector<std::vector<int>> A;
-
 		Eigen::IOFormat fmt;
 
 		printf("V:\n");
@@ -70,22 +66,24 @@ bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int
 		printf("F:\n");
 		Eigen::internal::print_matrix(std::cout, F, fmt);
 		printf("\n\n");
+	}
 
+	if (key == '1')
+	{
 		igl::vertex_triangle_adjacency(V, F, VF, VFi);
 
 		printf("Adjacency List: Vertex/Faces\n");
 		printVectorOfVectors(VF);
-
-		igl::adjacency_list(F, A);
-
-		printf("Adjacency List: Vertex/Vertex\n");
-		printVectorOfVectors(A);
 	}
 
 	if (key == '2')
 	{
-		//add your code for computing vertex to vertex relations here
-		//store in VV
+		std::vector<std::vector<int>> VV;
+
+		igl::adjacency_list(F, VV);
+
+		printf("Adjacency List: Vertex/Vertex\n");
+		printVectorOfVectors(VV);
 	}
 
 	if (key == '3')
@@ -93,11 +91,29 @@ bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int
 		viewer.data().clear();
 		viewer.data().set_mesh(V, F);
 		colors_per_face.setZero(F.rows(),3);
-		//add your code for computing per-face connected components here
-		//store the component labels in cid
-		//compute colors for the faces based on components
-		//store the colors in component_colors_per_face
-		//set the viewer colors
+
+		igl::facet_components(F, cid);
+
+		int i = 0;
+		int k = 0;
+		int l = 0;
+		while (i < cid.rows()) {
+			
+			if (cid(i) != k) {
+				printf("Size of Connected-Component %d is %d\n", k, l);
+				k++;
+				l = 0;
+			}
+
+			l++;
+
+			i++;
+
+		}
+		printf("Size of Connected-Component %d is %d\n", k, l);
+
+		igl::jet(cid, true, colors_per_face);
+
 		viewer.data().set_colors(colors_per_face);
 	}
 
@@ -405,7 +421,9 @@ int main(int argc, char *argv[]) {
     {
       // Read mesh
       igl::readOFF("../data/cube.off",V,F);
-    }
+//	  igl::readOFF("../data/coffeecup.off", V, F);
+//	  igl::readOFF("../data/honda.off", V, F);
+	}
 
     viewer.data().set_mesh(V,F);
     viewer.data().compute_normals();
