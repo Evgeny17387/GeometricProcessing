@@ -8,10 +8,14 @@ Edit this 'README.md' file to report all your results. There is no need to write
 1) Add a text dump of the content of the two data structures for the provided mesh “cube.off”.
 
 #### Answer:<br/>
-![alt text](Images/1.GIF "Title")
+For a given Cube:<br/>
+![alt text](Images/Q_1_Cube.GIF "Title")
 
-Explanation:<br/>
-The first structure is the vertices (coordinates) and the second structure is the faces (triangles - 3 vertices)
+Adjacency list of Vertex-To-Faces:<br/>
+![alt text](Images/Q_1_Cube_VertexToFaceAdjacencyList.GIF "Title")
+
+Adjacency list of Vertex-To-Vertex:<br/>
+![alt text](Images/Q_1_Cube_VertexToVertexAdjacencyList.GIF "Title")
 
 2) Show screenshots of the provided meshes with each connected component colored differently. Show the number of connected components and the size of each component (measured in number of faces) for all the provided models.
 
