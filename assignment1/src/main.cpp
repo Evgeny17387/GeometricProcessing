@@ -119,12 +119,107 @@ bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int
 
 	if (key == '4')
 	{
-		Eigen::MatrixXd Vout=V;
-		Eigen::MatrixXi Fout=F;
-		// Add your code for sqrt(3) subdivision here.
-		// Set up the viewer to display the new mesh
-		V = Vout; F = Fout;
-		update_display(viewer);
+		Eigen::MatrixXd Vout;
+		Eigen::MatrixXi Fout;
+
+        Vout.resize(V.rows()+ F.rows(), 3);
+        Fout.resize(F.rows()*3, 3);
+
+        // Old Vertices moved
+
+        std::vector<std::vector<int>> VV;
+        igl::adjacency_list(F, VV);
+
+        Eigen::Vector3d vNew;
+        int n;
+        double an;
+
+        for (int i = 0; i < V.rows(); i++) {
+
+            vNew = Eigen::Vector3d(0, 0, 0);
+            n = 0;
+
+            for (auto vertex : VV[i]) {
+
+                n++;
+
+                vNew += V.row(vertex);
+
+            }
+
+            an = (4 - 2 * cos(2 * 3.14 / n)) / 9;
+
+            Vout(i, 0) = V(i, 0) * (1 - an) + (an / n) * vNew(0);
+            Vout(i, 1) = V(i, 1) * (1 - an) + (an / n) * vNew(1);
+            Vout(i, 2) = V(i, 2) * (1 - an) + (an / n) * vNew(2);
+
+        }
+
+        // New Vertices and New Faces
+
+        int k = V.rows();
+        for (int i = 0; i < F.rows(); i++) {
+
+            Vout(k, 0) = (V.row(F(i, 0))(0) + V.row(F(i, 1))(0) + V.row(F(i, 2))(0)) / 3;
+            Vout(k, 1) = (V.row(F(i, 0))(1) + V.row(F(i, 1))(1) + V.row(F(i, 2))(1)) / 3;
+            Vout(k, 2) = (V.row(F(i, 0))(2) + V.row(F(i, 1))(2) + V.row(F(i, 2))(2)) / 3;
+
+            for (int j = 0; j < 3; j++) {
+
+                Fout(3*i+j, 0) = F(i, j%3);
+                Fout(3*i+j, 1) = F(i, (j+1)%3);
+                Fout(3*i+j, 2) = k;
+
+            }
+
+            k++;
+
+        }
+
+        // Update Faces
+
+        Eigen::MatrixXi EV;
+        Eigen::MatrixXi FE;
+        Eigen::MatrixXi EF;
+
+        igl::edge_topology(Vout, Fout, EV, FE, EF);
+
+        int Edge;
+
+        int Triangle;
+
+        std::set<int> Triangles = {};
+
+        for (int i = 0; i < Fout.rows(); i++) {
+
+            Edge = FE.row(i)[0];
+
+            if (EF.row(Edge)[0] != i) {
+                Triangle = EF.row(Edge)[0];
+            }
+            else {
+                Triangle = EF.row(Edge)[1];
+            }
+
+            if (Triangles.find(Triangle) != Triangles.end()) {
+                continue;
+            }
+            Triangles.insert(Triangle);
+
+            Fout(i, 1) = Fout(Triangle, 2);
+            Fout(Triangle, 1) = Fout(i, 2);
+
+        }
+
+        // Update view
+
+        V = Vout;
+        F = Fout;
+
+        viewer.data().clear();
+        viewer.data().set_mesh(V, F);
+
+        update_display(viewer);
 	}
     
     return false;
@@ -420,9 +515,10 @@ int main(int argc, char *argv[]) {
     else
     {
       // Read mesh
-      igl::readOFF("../data/cube.off",V,F);
+//    igl::readOFF("../data/Triangle.off", V, F);
+//    igl::readOFF("../data/cube.off",V,F);
 //	  igl::readOFF("../data/coffeecup.off", V, F);
-//	  igl::readOFF("../data/honda.off", V, F);
+	  igl::readOFF("../data/honda.off", V, F);
 	}
 
     viewer.data().set_mesh(V,F);
