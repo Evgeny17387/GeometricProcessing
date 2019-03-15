@@ -38,6 +38,9 @@ Edit this 'README.md' file to report all your results. There is no need to write
 #### Cup:<br/>
 ![alt text](Images/Q_3/Cup.GIF "Title")
 
+#### Honda:<br/>
+![alt text](Images/Q_3/Honda.GIF "Title")
+
 4) Show screenshots of face extrusion.
 
 5) Show a screenshot of a mesh you designed yourself starting from 'cube.off' and using the GUI supplied editing operations, as well as sqrt3 subdivision and face extrusion. Make sure to also save the mesh under the name 'design.off', commit and push it. 
