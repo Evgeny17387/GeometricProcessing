@@ -193,7 +193,7 @@ bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int
         for (int i = 0; i < Fout.rows(); i++) {
 
             Edge = FE.row(i)[0];
-
+        
             if (EF.row(Edge)[0] != i) {
                 Triangle = EF.row(Edge)[0];
             }
@@ -205,6 +205,10 @@ bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int
                 continue;
             }
             Triangles.insert(Triangle);
+
+            if ((Triangle < 0) || (Triangle >= Fout.rows())) {
+                continue;
+            }
 
             Fout(i, 1) = Fout(Triangle, 2);
             Fout(Triangle, 1) = Fout(i, 2);
