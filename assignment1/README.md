@@ -59,3 +59,10 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ![alt text](Images/Q_4/After_1_3.GIF "Title")
 
 5) Show a screenshot of a mesh you designed yourself starting from 'cube.off' and using the GUI supplied editing operations, as well as sqrt3 subdivision and face extrusion. Make sure to also save the mesh under the name 'design.off', commit and push it. 
+
+#### Desing 1<br/>
+![alt text](Images/Q_5/Design_1.GIF "Title")
+
+#### Desing 2<br/>
+![alt text](Images/Q_5/Design_2.GIF "Title")
+![alt text](Images/Q_5/Design_3.GIF "Title")
