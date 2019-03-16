@@ -119,8 +119,8 @@ bool callback_key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int
 
 	if (key == '4')
 	{
-		Eigen::MatrixXd Vout;
-		Eigen::MatrixXi Fout;
+		Eigen::MatrixXd Vout = V;
+		Eigen::MatrixXi Fout = F;
 
         Vout.resize(V.rows()+ F.rows(), 3);
         Fout.resize(F.rows()*3, 3);
@@ -277,26 +277,89 @@ void extrude(igl::opengl::glfw::Viewer& viewer) {
     // Add your code for updating Fout here
 
     // 5.1) Get the set of faces containing the old boundary vertices (hint: call igl::vertex_triangle_adjacency on the old 'F')
-    
+
+    igl::vertex_triangle_adjacency(V, F, VF, VFi);
+
+    std::set<int> all_faces;
+
+    for (int i = 0; i < bnd_loop.size(); i++) {
+
+        for (int j = 0; j < VF[bnd_loop[i]].size(); j++) {
+
+            all_faces.insert(VF[bnd_loop[i]][j]);
+
+        }
+
+    }
+
     // 5.2) Get the "outer" set of faces containing the boundary vertices 
     //      (hint: call std::set_difference to compute the difference between the previously computed set of faces, and the selected faces)
 
+    std::vector<int> outer_faces = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+    std::set_difference(all_faces.begin(), all_faces.end(), selected_faces.begin(), selected_faces.end(), outer_faces.begin());
+
     // 5.3) Edit old outer faces indices, replacing the old vertices with the indices of the duplicated boundary vertices
 
-    // 5.4) Add new faces, 2 per edge
-    int f_idx = F.rows();
-    for (int i = 0; i < bnd_loop.size(); i++) {
-        int v1,v2,v3,v4;
-        // set v1,v2,v3,v4 correctly
-        Fout.row(f_idx++) << v1,v2,v3;
-        Fout.row(f_idx++) << v3,v4,v1;
+    for (int i = 0; i < outer_faces.size(); i++) {
+
+        if (outer_faces[i] == -1)
+            break;
+
+        for (int j = 0; j < 3; j++) {
+
+            for (int k = 0; k < bnd_loop.size(); k++) {
+
+                if (Fout(outer_faces[i], j) == bnd_loop[k]) {
+                    
+                    Fout(outer_faces[i], j) = V.rows() + k;
+
+                }
+
+            }
+
+        }
+
     }
 
+    // 5.4) Add new faces, 2 per edge
+
+    int f_idx = F.rows();
+    int v1, v2, v3, v4;
+
+    for (int i = 0; i < bnd_loop.size()-1; i++) {
+        
+        v1 = bnd_loop[i];
+        v2 = bnd_loop[i+1];
+        v3 = V.rows() + i + 1;
+        v4 = V.rows()+i;
+
+        Fout.row(f_idx++) << v3,v2,v1;
+        Fout.row(f_idx++) << v1,v4,v3;
+
+    }
+
+    v1 = bnd_loop[bnd_loop.size()-1];
+    v2 = bnd_loop[0];
+    v3 = V.rows() + 0;
+    v4 = V.rows() + bnd_loop.size() - 1;
+
+    Fout.row(f_idx++) << v3, v2, v1;
+    Fout.row(f_idx++) << v1, v4, v3;
+
     // 6) Check that the new mesh is a manifold (call is_edge_manifold, is_vertex_manifold on Vout,Fout)
-    
+
+    bool manofildTest;
+
+    Eigen::MatrixXi B;
+
+    manofildTest = igl::is_edge_manifold(Fout);
+    manofildTest = igl::is_vertex_manifold(Fout, B);
+
     // 7) Update V,F
-    //V = Vout; // uncomment for your code to take effect
-    //F = Fout; // uncomment for your code to take effect
+
+    V = Vout; // uncomment for your code to take effect
+    F = Fout; // uncomment for your code to take effect
 
     // Update gui and move to edit-translate mode
     colors_per_face = Eigen::MatrixXd::Ones(F.rows(),3); // number of faces has changed
@@ -520,9 +583,9 @@ int main(int argc, char *argv[]) {
     {
       // Read mesh
 //    igl::readOFF("../data/Triangle.off", V, F);
-//    igl::readOFF("../data/cube.off",V,F);
+    igl::readOFF("../data/cube.off",V,F);
 //	  igl::readOFF("../data/coffeecup.off", V, F);
-	  igl::readOFF("../data/honda.off", V, F);
+//	  igl::readOFF("../data/honda.off", V, F);
 	}
 
     viewer.data().set_mesh(V,F);
