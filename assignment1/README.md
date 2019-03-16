@@ -43,4 +43,19 @@ Edit this 'README.md' file to report all your results. There is no need to write
 
 4) Show screenshots of face extrusion.
 
+#### Take 1: Before<br/>
+![alt text](Images/Q_4/Before_2.GIF "Title")
+
+#### Take 1: After<br/>
+![alt text](Images/Q_4/After_2_1.GIF "Title")
+![alt text](Images/Q_4/After_2_2.GIF "Title")
+
+#### Take 2: Before<br/>
+![alt text](Images/Q_4/Before_1.GIF "Title")
+
+#### Take 2: After<br/>
+![alt text](Images/Q_4/After_1_1.GIF "Title")
+![alt text](Images/Q_4/After_1_2.GIF "Title")
+![alt text](Images/Q_4/After_1_3.GIF "Title")
+
 5) Show a screenshot of a mesh you designed yourself starting from 'cube.off' and using the GUI supplied editing operations, as well as sqrt3 subdivision and face extrusion. Make sure to also save the mesh under the name 'design.off', commit and push it. 
