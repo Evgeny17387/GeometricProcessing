@@ -166,6 +166,7 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         // Show imported points
         viewer.data().clear();
         viewer.core.align_camera_center(P);
+
         viewer.data().point_size = 11;
         viewer.data().add_points(P, Eigen::RowVector3d(0,0,0));
     }
@@ -174,8 +175,38 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         // Show all constraints
         viewer.data().clear();
         viewer.core.align_camera_center(P);
+
         // Add your code for computing auxiliary constraint points here
+
+        double epsilon = 0.1;
+
+        constrained_points.resize(3 * P.rows(), 3);
+        constrained_values.resize(3 * P.rows(), 1);
+
+        Eigen::MatrixXd colors_per_face;
+        colors_per_face.setZero(3 * P.rows(), 3);
+
+        for (int i = 0; i < P.rows(); i++) {
+
+            constrained_points.row(3 * i)       = P.row(i);
+            constrained_values(3 * i, 0)        = 0;
+            colors_per_face.row(3 * i)          = Eigen::RowVector3d(0, 0, 1);
+
+            constrained_points.row(3 * i + 1)   = P.row(i) + epsilon * N.row(i);
+            constrained_values(3 * i + 1, 0)    = epsilon;
+            colors_per_face.row(3 * i + 1)      = Eigen::RowVector3d(1, 0, 0);
+
+            constrained_points.row(3 * i + 2)   = P.row(i) - epsilon * N.row(i);
+            constrained_values(3 * i + 2, 0)    = -epsilon;
+            colors_per_face.row(3 * i + 2)      = Eigen::RowVector3d(0, 1, 0);
+
+        }
+
         // Add code for displaying all points, as above
+
+        viewer.data().point_size = 11;
+        viewer.data().add_points(constrained_points, colors_per_face);
+
     }
 
     if (key == '3') {
@@ -257,7 +288,10 @@ bool callback_load_mesh(Viewer& viewer,string filename)
 int main(int argc, char *argv[]) {
     if (argc != 2) {
       cout << "Usage ex2_bin <mesh.off>" << endl;
-      igl::readOFF("../data/sphere.off",P,F,N);
+//      igl::readOFF("../data/Test.off", P, F, N);
+//      igl::readOFF("../data/sphere.off",P,F,N);
+//      igl::readOFF("../data/cat.off", P, F, N);
+      igl::readOFF("../data/bunny-500.off", P, F, N);
     }
 	  else
 	  {
