@@ -178,7 +178,13 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
 
         // Add your code for computing auxiliary constraint points here
 
-        double epsilon = 0.1;
+        // Bounding box dimensions
+        Eigen::RowVector3d bb_min, bb_max;
+        bb_min = P.colwise().minCoeff();
+        bb_max = P.colwise().maxCoeff();
+        Eigen::RowVector3d dim = bb_max - bb_min;
+
+        double epsilon = 0.01 * sqrt(pow(dim[0], 2) + pow(dim[1], 2) + pow(dim[2], 2));
 
         constrained_points.resize(3 * P.rows(), 3);
         constrained_values.resize(3 * P.rows(), 1);
@@ -289,9 +295,9 @@ int main(int argc, char *argv[]) {
     if (argc != 2) {
       cout << "Usage ex2_bin <mesh.off>" << endl;
 //      igl::readOFF("../data/Test.off", P, F, N);
-//      igl::readOFF("../data/sphere.off",P,F,N);
+      igl::readOFF("../data/sphere.off",P,F,N);
 //      igl::readOFF("../data/cat.off", P, F, N);
-      igl::readOFF("../data/bunny-500.off", P, F, N);
+//      igl::readOFF("../data/bunny-500.off", P, F, N);
     }
 	  else
 	  {
