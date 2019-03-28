@@ -84,6 +84,7 @@ void createGrid() {
     const double dx = dim[0] / (double)(resolution - 1);
     const double dy = dim[1] / (double)(resolution - 1);
     const double dz = dim[2] / (double)(resolution - 1);
+
     // 3D positions of the grid points -- see slides or marching_cubes.h for ordering
     grid_points.resize(resolution * resolution * resolution, 3);
     // Create each gridpoint
@@ -106,25 +107,71 @@ void createGrid() {
 // Replace this with your own function for evaluating the implicit function
 // values at the grid points using MLS
 void evaluateImplicitFunc() {
-    // Sphere center
-    auto bb_min = grid_points.colwise().minCoeff().eval();
-    auto bb_max = grid_points.colwise().maxCoeff().eval();
-    Eigen::RowVector3d center = 0.5 * (bb_min + bb_max);
-
-    double radius = 0.5 * (bb_max - bb_min).minCoeff();
 
     // Scalar values of the grid points (the implicit function values)
     grid_values.resize(resolution * resolution * resolution);
+
+    Eigen::MatrixXd A;
+    A.resize(constrained_points.rows(), 4);
+
+    for (int i = 0; i < A.rows(); i++) {
+        A(i, 0) = 1;
+        for (int j = 0; j < 3; j++) {
+            A(i, j+1) = constrained_points(i, j);
+        }
+    }
+
+    Eigen::MatrixXd f;
+    f.resize(constrained_values.rows(), 1);
+
+    for (int i = 0; i < f.rows(); i++) {
+        f(i, 0) = constrained_values(i, 0);
+    }
 
     // Evaluate sphere's signed distance function at each gridpoint.
     for (unsigned int x = 0; x < resolution; ++x) {
         for (unsigned int y = 0; y < resolution; ++y) {
             for (unsigned int z = 0; z < resolution; ++z) {
+
                 // Linear index of the point at (x,y,z)
                 int index = x + resolution * (y + resolution * z);
 
-                // Value at (x,y,z) = implicit function for the sphere
-                grid_values[index] = (grid_points.row(index) - center).norm() - radius;
+                Eigen::MatrixXd w;
+                w.resize(constrained_points.rows(), constrained_points.rows());
+                w.setZero(constrained_points.rows(), constrained_points.rows());
+
+                Eigen::RowVector3d point1;
+                point1(0) = grid_points(index, 0);
+                point1(1) = grid_points(index, 1);
+                point1(2) = grid_points(index, 2);
+
+                for (int i = 0; i < w.rows(); i++) {
+
+                    Eigen::RowVector3d point3;
+                    point3(0) = constrained_points(i, 0);
+                    point3(1) = constrained_points(i, 1);
+                    point3(2) = constrained_points(i, 2);
+
+                    Eigen::RowVector3d diff = point1 - point3;
+
+                    w(i, i) = sqrt(pow(diff(0), 2) + pow(diff(1), 2) + pow(diff(2), 2));
+
+                }
+
+                Eigen::MatrixXd A_tag = w * A;
+
+                Eigen::MatrixXd f_tag = w * f;
+
+                Eigen::RowVector4d c = A.colPivHouseholderQr().solve(f_tag).transpose();
+
+                Eigen::RowVector4d point2;
+                point2(0) = 1;
+                point2(1) = grid_points(index, 0);
+                point2(2) = grid_points(index, 1);
+                point2(3) = grid_points(index, 2);
+
+                grid_values[index] = point2.dot(c);
+
             }
         }
     }
@@ -219,9 +266,13 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         // Show grid points with colored nodes and connected with lines
         viewer.data().clear();
         viewer.core.align_camera_center(P);
+
         // Add code for creating a grid
+
         // Add your code for evaluating the implicit function at the grid points
+
         // Add code for displaying points and lines
+
         // You can use the following example:
 
         /*** begin: sphere example, replace (at least partially) with your code ***/
@@ -232,7 +283,7 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         evaluateImplicitFunc();
 
         // get grid lines
-        getLines();
+//        getLines();
 
         // Code for coloring and displaying the grid points and lines
         // Assumes that grid_values and grid_points have been correctly assigned.
@@ -253,9 +304,9 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         // Draw lines and points
         viewer.data().point_size = 8;
         viewer.data().add_points(grid_points, grid_colors);
-        viewer.data().add_edges(grid_lines.block(0, 0, grid_lines.rows(), 3),
-                              grid_lines.block(0, 3, grid_lines.rows(), 3),
-                              Eigen::RowVector3d(0.8, 0.8, 0.8));
+
+//       viewer.data().add_edges(grid_lines.block(0, 0, grid_lines.rows(), 3), grid_lines.block(0, 3, grid_lines.rows(), 3), Eigen::RowVector3d(0.8, 0.8, 0.8));
+
         /*** end: sphere example ***/
     }
 
@@ -294,8 +345,8 @@ bool callback_load_mesh(Viewer& viewer,string filename)
 int main(int argc, char *argv[]) {
     if (argc != 2) {
       cout << "Usage ex2_bin <mesh.off>" << endl;
-//      igl::readOFF("../data/Test.off", P, F, N);
-      igl::readOFF("../data/sphere.off",P,F,N);
+      igl::readOFF("../data/Test.off", P, F, N);
+//      igl::readOFF("../data/sphere.off",P,F,N);
 //      igl::readOFF("../data/cat.off", P, F, N);
 //      igl::readOFF("../data/bunny-500.off", P, F, N);
     }
