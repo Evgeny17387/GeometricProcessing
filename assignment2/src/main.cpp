@@ -109,60 +109,117 @@ void createGrid() {
 void evaluateImplicitFunc() {
 
     // Scalar values of the grid points (the implicit function values)
+
     grid_values.resize(resolution * resolution * resolution);
+    
+    // Radius of neighbors
 
-    Eigen::MatrixXd A;
-    A.resize(constrained_points.rows(), 4);
-
-    for (int i = 0; i < A.rows(); i++) {
-        A(i, 0) = 1;
-        for (int j = 0; j < 3; j++) {
-            A(i, j+1) = constrained_points(i, j);
-        }
-    }
-
-    Eigen::MatrixXd f;
-    f.resize(constrained_values.rows(), 1);
-
-    for (int i = 0; i < f.rows(); i++) {
-        f(i, 0) = constrained_values(i, 0);
-    }
+    double radius = 1;
 
     // Evaluate sphere's signed distance function at each gridpoint.
+
     for (unsigned int x = 0; x < resolution; ++x) {
         for (unsigned int y = 0; y < resolution; ++y) {
             for (unsigned int z = 0; z < resolution; ++z) {
 
                 // Linear index of the point at (x,y,z)
+
                 int index = x + resolution * (y + resolution * z);
 
-                Eigen::MatrixXd w;
-                w.resize(constrained_points.rows(), constrained_points.rows());
-                w.setZero(constrained_points.rows(), constrained_points.rows());
+                // Current grid point
 
                 Eigen::RowVector3d point1;
                 point1(0) = grid_points(index, 0);
                 point1(1) = grid_points(index, 1);
                 point1(2) = grid_points(index, 2);
 
-                for (int i = 0; i < w.rows(); i++) {
+                // Initialization
+
+                Eigen::MatrixXd A;
+                Eigen::MatrixXd f;
+                Eigen::MatrixXd w;
+
+                Eigen::MatrixXd ATemp;
+                Eigen::MatrixXd fTemp;
+                Eigen::MatrixXd wTemp;
+
+                A.resize(0, 4);
+                f.resize(0, 1);
+                w.resize(0, 0);
+
+                // Searching closest neighbors
+
+                for (int i = 0; i < constrained_points.rows(); i++) {
 
                     Eigen::RowVector3d point3;
+
                     point3(0) = constrained_points(i, 0);
                     point3(1) = constrained_points(i, 1);
                     point3(2) = constrained_points(i, 2);
 
                     Eigen::RowVector3d diff = point1 - point3;
 
-                    w(i, i) = sqrt(pow(diff(0), 2) + pow(diff(1), 2) + pow(diff(2), 2));
+                    double distance = sqrt(pow(diff(0), 2) + pow(diff(1), 2) + pow(diff(2), 2));
+
+                    if (distance < radius) {
+
+                        ATemp = A;
+                        fTemp = f;
+                        wTemp = w;
+
+                        A.resize(A.rows() + 1, 4);
+                        f.resize(f.rows() + 1, 1);
+                        w.resize(w.rows() + 1, w.rows() + 1);
+                        w.setZero(w.rows(), w.rows());
+
+                        // Update all matrices with previous values
+
+                        for (int j = 0; j < ATemp.rows(); j++) {
+                            
+                            // Update A
+
+                            for (int k = 0; k < 4; k++) {
+                                A(j, k) = ATemp(j, k);
+                            }
+
+                            // Update f
+
+                            f(j, 0) = fTemp(j, 0);
+
+                            // Update w
+
+                            w(j, j) = wTemp(j, j);
+
+                        }
+
+                        // Update all matrices with new values
+
+                        // Update A
+
+                        A(A.rows()-1, 0) = 1;
+                        for (int k = 0; k < 3; k++) {
+                            A(A.rows() - 1, k + 1) = constrained_points(i, k);
+                        }
+
+                        // Update f
+
+                        f(f.rows()-1, 0) = constrained_values(i, 0);
+
+                        // Update w
+
+                        w(w.rows()-1, w.rows() - 1) = distance;
+
+                    }
 
                 }
 
+                // Solving the linear equations
+
                 Eigen::MatrixXd A_tag = w * A;
-
                 Eigen::MatrixXd f_tag = w * f;
-
                 Eigen::RowVector4d c = A.colPivHouseholderQr().solve(f_tag).transpose();
+
+                // value of current grid point
 
                 Eigen::RowVector4d point2;
                 point2(0) = 1;
@@ -175,6 +232,7 @@ void evaluateImplicitFunc() {
             }
         }
     }
+
 }
 
 // Code to display the grid lines given a grid structure of the given form.
