@@ -7,6 +7,8 @@
 #include <igl/per_face_normals.h>
 #include <igl/copyleft/marching_cubes.h>
 
+#define MAX_INT 0xFFFFFFFF
+
 using namespace std;
 using Viewer = igl::opengl::glfw::Viewer;
 
@@ -23,13 +25,24 @@ Eigen::MatrixXd constrained_points;
 Eigen::VectorXd constrained_values;
 
 // Parameter: degree of the polynomial
-int polyDegree = 0;
+int polyDegree = 1;
 
 // Parameter: Wendland weight function radius (make this relative to the size of the mesh)
-double wendlandRadius = 0.1;
+double wendlandRadius_factor = 0.1;
+
+// Parameter: Factor multiplies object dimensions for epsilon
+double epsilon_factor = 0.01;
+
+// Parameter: Smoothing factor for weight function
+double h = 1;
+
+// Parameter: Object number
+int object = 0;
 
 // Parameter: grid resolution
-int resolution = 20;
+int resolutionX = 10;
+int resolutionY = 10;
+int resolutionZ = 10;
 
 // Intermediate result: grid points, at which the imlicit function will be evaluated, #G x3
 Eigen::MatrixXd grid_points;
@@ -54,10 +67,16 @@ Eigen::MatrixXi F;
 Eigen::MatrixXd FN;
 
 // Functions
+double weightFunction(double r);
 void createGrid();
 void evaluateImplicitFunc();
 void getLines();
 bool callback_key_down(Viewer& viewer, unsigned char key, int modifiers);
+
+// Wendland weight function
+double weightFunction(double r) {
+    return pow(1-r/h, 4)*(4*r/h+1);
+}
 
 // Creates a grid_points array for the simple sphere example. The points are
 // stacked into a single matrix, ordered first in the x, then in the y and
@@ -81,23 +100,27 @@ void createGrid() {
     Eigen::RowVector3d dim = bb_max - bb_min;
 
     // Grid spacing
-    const double dx = dim[0] / (double)(resolution - 1);
-    const double dy = dim[1] / (double)(resolution - 1);
-    const double dz = dim[2] / (double)(resolution - 1);
+    const double dx = dim[0] / (double)(resolutionX - 1);
+    const double dy = dim[1] / (double)(resolutionY - 1);
+    const double dz = dim[2] / (double)(resolutionZ - 1);
 
     // 3D positions of the grid points -- see slides or marching_cubes.h for ordering
-    grid_points.resize(resolution * resolution * resolution, 3);
+    grid_points.resize(resolutionX * resolutionY * resolutionZ, 3);
     // Create each gridpoint
-    for (unsigned int x = 0; x < resolution; ++x) {
-        for (unsigned int y = 0; y < resolution; ++y) {
-            for (unsigned int z = 0; z < resolution; ++z) {
+    for (unsigned int x = 0; x < resolutionX; ++x) {
+        for (unsigned int y = 0; y < resolutionY; ++y) {
+            for (unsigned int z = 0; z < resolutionZ; ++z) {
                 // Linear index of the point at (x,y,z)
-                int index = x + resolution * (y + resolution * z);
+                int index = x + resolutionX * (y + resolutionY * z);
                 // 3D point at (x,y,z)
                 grid_points.row(index) = bb_min + Eigen::RowVector3d(x * dx, y * dy, z * dz);
             }
         }
     }
+
+    grid_values.resize(resolutionX * resolutionY * resolutionZ);
+    grid_values.setZero(resolutionX * resolutionY * resolutionZ);
+
 }
 
 // Function for explicitly evaluating the implicit function for a sphere of
@@ -108,23 +131,38 @@ void createGrid() {
 // values at the grid points using MLS
 void evaluateImplicitFunc() {
 
-    // Scalar values of the grid points (the implicit function values)
+    // Bounding box dimensions
+    Eigen::RowVector3d bb_min, bb_max;
+    bb_min = P.colwise().minCoeff();
+    bb_max = P.colwise().maxCoeff();
+    Eigen::RowVector3d dim = bb_max - bb_min;
 
-    grid_values.resize(resolution * resolution * resolution);
+    double wendlandRadius = wendlandRadius_factor * sqrt(pow(dim[0], 2) + pow(dim[1], 2) + pow(dim[2], 2));
     
-    // Radius of neighbors
+    // Polinom Degree
 
-    double radius = 4;
+    int AColSize = 4;
+
+    switch (polyDegree) {
+        case 1:
+            AColSize = 4;
+        break;
+        case 2:
+            AColSize = 10;
+        break;
+    }
 
     // Evaluate sphere's signed distance function at each gridpoint.
 
-    for (unsigned int x = 0; x < resolution; ++x) {
-        for (unsigned int y = 0; y < resolution; ++y) {
-            for (unsigned int z = 0; z < resolution; ++z) {
+    int counter = 0;
+
+    for (unsigned int x = 0; x < resolutionX; ++x) {
+        for (unsigned int y = 0; y < resolutionY; ++y) {
+            for (unsigned int z = 0; z < resolutionZ; ++z) {
 
                 // Linear index of the point at (x,y,z)
 
-                int index = x + resolution * (y + resolution * z);
+                int index = x + resolutionX * (y + resolutionY * z);
 
                 // Current grid point
 
@@ -139,7 +177,9 @@ void evaluateImplicitFunc() {
                 Eigen::MatrixXd f;
                 Eigen::MatrixXd w;
 
-                A.resize(0, 4);
+                
+
+                A.resize(0, AColSize);
                 f.resize(0, 1);
                 w.resize(0, 0);
 
@@ -157,9 +197,9 @@ void evaluateImplicitFunc() {
 
                     double distance = sqrt(pow(diff(0), 2) + pow(diff(1), 2) + pow(diff(2), 2));
 
-                    if (distance < radius) {
+                    if (distance < wendlandRadius) {
 
-                        A.conservativeResize(A.rows() + 1, 4);
+                        A.conservativeResize(A.rows() + 1, AColSize);
                         f.conservativeResize(f.rows() + 1, 1);
                         w.conservativeResize(w.rows() + 1, w.rows() + 1);
 
@@ -168,6 +208,15 @@ void evaluateImplicitFunc() {
                         A(A.rows()-1, 0) = 1;
                         for (int j = 0; j < 3; j++) {
                             A(A.rows() - 1, j + 1) = constrained_points(i, j);
+                        }
+                        if (polyDegree == 2) {
+                            A(A.rows() - 1, 4) = constrained_points(i, 0)*constrained_points(i, 0);
+                            A(A.rows() - 1, 5) = constrained_points(i, 1)*constrained_points(i, 1);
+                            A(A.rows() - 1, 6) = constrained_points(i, 2)*constrained_points(i, 2);
+
+                            A(A.rows() - 1, 7) = constrained_points(i, 0)*constrained_points(i, 1);
+                            A(A.rows() - 1, 8) = constrained_points(i, 1)*constrained_points(i, 2);
+                            A(A.rows() - 1, 9) = constrained_points(i, 0)*constrained_points(i, 2);
                         }
 
                         // Update f
@@ -180,28 +229,51 @@ void evaluateImplicitFunc() {
                             w(j, w.rows() - 1) = 0;
                             w(w.rows() - 1, j) = 0;
                         }
-
-                        w(w.rows()-1, w.rows() - 1) = distance;
+                        w(w.rows()-1, w.rows() - 1) = weightFunction(distance);
 
                     }
 
                 }
 
-                // Solving the linear equations
+                if (A.rows() != 0) {
 
-                Eigen::MatrixXd A_tag = w * A;
-                Eigen::MatrixXd f_tag = w * f;
-                Eigen::RowVector4d c = A.colPivHouseholderQr().solve(f_tag).transpose();
+                    // Solving the linear equations
 
-                // value of current grid point
+                    Eigen::MatrixXd A_tag = w * A;
+                    Eigen::MatrixXd f_tag = w * f;
 
-                Eigen::RowVector4d point2;
-                point2(0) = 1;
-                point2(1) = grid_points(index, 0);
-                point2(2) = grid_points(index, 1);
-                point2(3) = grid_points(index, 2);
+                    Eigen::RowVectorXd c;
+                    c.resize(1, AColSize);
+                    c = A.colPivHouseholderQr().solve(f_tag).transpose();
 
-                grid_values[index] = point2.dot(c);
+                    // value of current grid point
+
+                    Eigen::RowVectorXd point2;
+                    point2.resize(1, AColSize);
+                    point2(0) = 1;
+                    point2(1) = grid_points(index, 0);
+                    point2(2) = grid_points(index, 1);
+                    point2(3) = grid_points(index, 2);
+                    if (polyDegree == 2) {
+                        point2(4) = grid_points(index, 0)*grid_points(index, 0);
+                        point2(5) = grid_points(index, 1)*grid_points(index, 1);
+                        point2(6) = grid_points(index, 2)*grid_points(index, 2);
+
+                        point2(7) = grid_points(index, 0)*grid_points(index, 1);
+                        point2(8) = grid_points(index, 1)*grid_points(index, 2);
+                        point2(9) = grid_points(index, 0)*grid_points(index, 2);
+                    }
+
+                    grid_values[index] = point2.dot(c);
+
+                }
+                else {
+
+                    grid_values[index] = MAX_INT;
+
+                }
+
+                printf("%d of %d\n", ++counter, resolutionX*resolutionY*resolutionZ);
 
             }
         }
@@ -217,20 +289,20 @@ void getLines() {
     grid_lines.resize(3 * nnodes, 6);
     int numLines = 0;
 
-    for (unsigned int x = 0; x<resolution; ++x) {
-        for (unsigned int y = 0; y < resolution; ++y) {
-            for (unsigned int z = 0; z < resolution; ++z) {
-                int index = x + resolution * (y + resolution * z);
-                if (x < resolution - 1) {
-                    int index1 = (x + 1) + y * resolution + z * resolution * resolution;
+    for (unsigned int x = 0; x<resolutionZ; ++x) {
+        for (unsigned int y = 0; y < resolutionY; ++y) {
+            for (unsigned int z = 0; z < resolutionZ; ++z) {
+                int index = x + resolutionX * (y + resolutionY * z);
+                if (x < resolutionZ - 1) {
+                    int index1 = (x + 1) + y * resolutionX + z * resolutionX * resolutionY;
                     grid_lines.row(numLines++) << grid_points.row(index), grid_points.row(index1);
                 }
-                if (y < resolution - 1) {
-                    int index1 = x + (y + 1) * resolution + z * resolution * resolution;
+                if (y < resolutionY - 1) {
+                    int index1 = x + (y + 1) * resolutionX + z * resolutionX * resolutionY;
                     grid_lines.row(numLines++) << grid_points.row(index), grid_points.row(index1);
                 }
-                if (z < resolution - 1) {
-                    int index1 = x + y * resolution + (z + 1) * resolution * resolution;
+                if (z < resolutionZ - 1) {
+                    int index1 = x + y * resolutionX + (z + 1) * resolutionX * resolutionY;
                     grid_lines.row(numLines++) << grid_points.row(index), grid_points.row(index1);
                 }
             }
@@ -263,7 +335,7 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         bb_max = P.colwise().maxCoeff();
         Eigen::RowVector3d dim = bb_max - bb_min;
 
-        double epsilon = 0.01 * sqrt(pow(dim[0], 2) + pow(dim[1], 2) + pow(dim[2], 2));
+        double epsilon = epsilon_factor * sqrt(pow(dim[0], 2) + pow(dim[1], 2) + pow(dim[2], 2));
 
         constrained_points.resize(3 * P.rows(), 3);
         constrained_values.resize(3 * P.rows(), 1);
@@ -299,15 +371,6 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         viewer.data().clear();
         viewer.core.align_camera_center(P);
 
-        // Add code for creating a grid
-
-        // Add your code for evaluating the implicit function at the grid points
-
-        // Add code for displaying points and lines
-
-        // You can use the following example:
-
-        /*** begin: sphere example, replace (at least partially) with your code ***/
         // Make grid
         createGrid();
 
@@ -351,7 +414,7 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
             return true;
         }
         // Run marching cubes
-        igl::copyleft::marching_cubes(grid_values, grid_points, resolution, resolution, resolution, V, F);
+        igl::copyleft::marching_cubes(grid_values, grid_points, resolutionX, resolutionY, resolutionZ, V, F);
         if (V.rows() == 0) {
             cerr << "Marching Cubes failed!" << endl;
             return true;
@@ -375,18 +438,6 @@ bool callback_load_mesh(Viewer& viewer,string filename)
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-      cout << "Usage ex2_bin <mesh.off>" << endl;
-      igl::readOFF("../data/Test.off", P, F, N);
-//      igl::readOFF("../data/sphere.off",P,F,N);
-//      igl::readOFF("../data/cat.off", P, F, N);
-//      igl::readOFF("../data/bunny-500.off", P, F, N);
-    }
-	  else
-	  {
-		  // Read points and normals
-		  igl::readOFF(argv[1],P,F,N);
-	  }
 
     Viewer viewer;
     igl::opengl::glfw::imgui::ImGuiMenu menu;
@@ -403,22 +454,39 @@ int main(int argc, char *argv[]) {
       if (ImGui::CollapsingHeader("Reconstruction Options", ImGuiTreeNodeFlags_DefaultOpen))
       {
         // Expose variable directly ...
-        ImGui::InputInt("Resolution", &resolution, 0, 0);
-        if (ImGui::Button("Reset Grid", ImVec2(-1,0)))
+        ImGui::InputInt("Resolution-X", &resolutionX, 0, 0);
+        ImGui::InputInt("Resolution-Y", &resolutionY, 0, 0);
+        ImGui::InputInt("Resolution-Z", &resolutionZ, 0, 0);
+
+        ImGui::InputDouble("Wendland Radius", &wendlandRadius_factor, 0, 0);
+        ImGui::InputDouble("Epsilon", &epsilon_factor, 0, 0);
+        ImGui::InputInt("Polinom Degree", &polyDegree, 0, 0);
+        ImGui::InputDouble("Smoothing Factor", &h, 0, 0);
+
+        ImGui::InputInt("Object", &object, 0, 0);
+        if (ImGui::Button("Load Object", ImVec2(-1, 0)))
         {
-          std::cout << "ResetGrid\n";
-          // Recreate the grid
-          createGrid();
-          // Switch view to show the grid
-          callback_key_down(viewer,'3',0);
+            switch (object) {
+            case 0:
+                igl::readOFF("../data/Test.off", P, F, N);
+                break;
+            case 1:
+                igl::readOFF("../data/sphere.off", P, F, N);
+                break;
+            case 2:
+                igl::readOFF("../data/cat.off", P, F, N);
+                break;
+            case 3:
+                igl::readOFF("../data/luigi.off", P, F, N);
+                break;
+            }
+
+            callback_key_down(viewer, '1', 0);
         }
 
-        // TODO: Add more parameters to tweak here...
       }
 
     };
-
-    callback_key_down(viewer, '1', 0);
 
     viewer.launch();
 }
