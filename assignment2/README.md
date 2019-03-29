@@ -34,6 +34,9 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ##### Parameters: Res_15_WR_0.15_Epsilon_0.1_PD_1_SF_150 <br/>
 ![alt text](Images/Q_3/Cat_Res_15_WR_0.15_Epsilon_0.1_PD_1_SF_150.JPG "Title")
 
+#### Conclusions:<br/>
+##### 1. As it can be seen from the Sphere, increasing the Smoothing Factor from 0.35 to 1 has improved significantly the quality <br/>
+
 4) Theory question: Save your notes to assignment2/results and add a link to this page.
 
 ### Optional Tasks
