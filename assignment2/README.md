@@ -24,7 +24,7 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ##### Parameters: Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_Unset <br/>
 ![alt text](Images/Q_3/Sphere_Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_Unset.JPG "Title")
 ##### Parameters: Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_1 <br/>
-![alt text](Images/Q_3/Sphere_Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_Unset.JPG "Title")
+![alt text](Images/Q_3/Sphere_Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_1.JPG "Title")
 
 #### Cat:<br/>
 ##### Parameters: Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_Unset <br/>
