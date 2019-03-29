@@ -114,7 +114,7 @@ void evaluateImplicitFunc() {
     
     // Radius of neighbors
 
-    double radius = 1;
+    double radius = 4;
 
     // Evaluate sphere's signed distance function at each gridpoint.
 
@@ -139,10 +139,6 @@ void evaluateImplicitFunc() {
                 Eigen::MatrixXd f;
                 Eigen::MatrixXd w;
 
-                Eigen::MatrixXd ATemp;
-                Eigen::MatrixXd fTemp;
-                Eigen::MatrixXd wTemp;
-
                 A.resize(0, 4);
                 f.resize(0, 1);
                 w.resize(0, 0);
@@ -163,42 +159,15 @@ void evaluateImplicitFunc() {
 
                     if (distance < radius) {
 
-                        ATemp = A;
-                        fTemp = f;
-                        wTemp = w;
-
-                        A.resize(A.rows() + 1, 4);
-                        f.resize(f.rows() + 1, 1);
-                        w.resize(w.rows() + 1, w.rows() + 1);
-                        w.setZero(w.rows(), w.rows());
-
-                        // Update all matrices with previous values
-
-                        for (int j = 0; j < ATemp.rows(); j++) {
-                            
-                            // Update A
-
-                            for (int k = 0; k < 4; k++) {
-                                A(j, k) = ATemp(j, k);
-                            }
-
-                            // Update f
-
-                            f(j, 0) = fTemp(j, 0);
-
-                            // Update w
-
-                            w(j, j) = wTemp(j, j);
-
-                        }
-
-                        // Update all matrices with new values
+                        A.conservativeResize(A.rows() + 1, 4);
+                        f.conservativeResize(f.rows() + 1, 1);
+                        w.conservativeResize(w.rows() + 1, w.rows() + 1);
 
                         // Update A
 
                         A(A.rows()-1, 0) = 1;
-                        for (int k = 0; k < 3; k++) {
-                            A(A.rows() - 1, k + 1) = constrained_points(i, k);
+                        for (int j = 0; j < 3; j++) {
+                            A(A.rows() - 1, j + 1) = constrained_points(i, j);
                         }
 
                         // Update f
@@ -206,6 +175,11 @@ void evaluateImplicitFunc() {
                         f(f.rows()-1, 0) = constrained_values(i, 0);
 
                         // Update w
+
+                        for (int j = 0; j < w.rows(); j++) {
+                            w(j, w.rows() - 1) = 0;
+                            w(w.rows() - 1, j) = 0;
+                        }
 
                         w(w.rows()-1, w.rows() - 1) = distance;
 
