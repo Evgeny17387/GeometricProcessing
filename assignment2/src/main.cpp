@@ -153,6 +153,9 @@ void createGrid() {
     bb_min = P.colwise().minCoeff();
     bb_max = P.colwise().maxCoeff();
 
+    bb_min *= 1.1;
+    bb_max *= 1.1;
+
     // Bounding box dimensions
     Eigen::RowVector3d dim = bb_max - bb_min;
 
