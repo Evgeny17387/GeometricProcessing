@@ -201,6 +201,8 @@ void evaluateImplicitFunc() {
     int AColSize = 4;
 
     switch (polyDegree) {
+        case 0:
+            AColSize = 1;
         case 1:
             AColSize = 4;
         break;
@@ -285,17 +287,19 @@ void evaluateImplicitFunc() {
                                     // Update A
 
                                     A(A.rows() - 1, 0) = 1;
-                                    for (int j = 0; j < 3; j++) {
-                                        A(A.rows() - 1, j + 1) = constrained_points(i, j);
-                                    }
-                                    if (polyDegree == 2) {
-                                        A(A.rows() - 1, 4) = constrained_points(i, 0)*constrained_points(i, 0);
-                                        A(A.rows() - 1, 5) = constrained_points(i, 1)*constrained_points(i, 1);
-                                        A(A.rows() - 1, 6) = constrained_points(i, 2)*constrained_points(i, 2);
+                                    if (polyDegree != 0) {
+                                        for (int j = 0; j < 3; j++) {
+                                            A(A.rows() - 1, j + 1) = constrained_points(i, j);
+                                        }
+                                        if (polyDegree == 2) {
+                                            A(A.rows() - 1, 4) = constrained_points(i, 0)*constrained_points(i, 0);
+                                            A(A.rows() - 1, 5) = constrained_points(i, 1)*constrained_points(i, 1);
+                                            A(A.rows() - 1, 6) = constrained_points(i, 2)*constrained_points(i, 2);
 
-                                        A(A.rows() - 1, 7) = constrained_points(i, 0)*constrained_points(i, 1);
-                                        A(A.rows() - 1, 8) = constrained_points(i, 1)*constrained_points(i, 2);
-                                        A(A.rows() - 1, 9) = constrained_points(i, 0)*constrained_points(i, 2);
+                                            A(A.rows() - 1, 7) = constrained_points(i, 0)*constrained_points(i, 1);
+                                            A(A.rows() - 1, 8) = constrained_points(i, 1)*constrained_points(i, 2);
+                                            A(A.rows() - 1, 9) = constrained_points(i, 0)*constrained_points(i, 2);
+                                        }
                                     }
 
                                     // Update f
@@ -333,17 +337,19 @@ void evaluateImplicitFunc() {
                     Eigen::RowVectorXd point2;
                     point2.resize(1, AColSize);
                     point2(0) = 1;
-                    point2(1) = grid_points(index, 0);
-                    point2(2) = grid_points(index, 1);
-                    point2(3) = grid_points(index, 2);
-                    if (polyDegree == 2) {
-                        point2(4) = grid_points(index, 0)*grid_points(index, 0);
-                        point2(5) = grid_points(index, 1)*grid_points(index, 1);
-                        point2(6) = grid_points(index, 2)*grid_points(index, 2);
+                    if (polyDegree != 0) {
+                        point2(1) = grid_points(index, 0);
+                        point2(2) = grid_points(index, 1);
+                        point2(3) = grid_points(index, 2);
+                        if (polyDegree == 2) {
+                            point2(4) = grid_points(index, 0)*grid_points(index, 0);
+                            point2(5) = grid_points(index, 1)*grid_points(index, 1);
+                            point2(6) = grid_points(index, 2)*grid_points(index, 2);
 
-                        point2(7) = grid_points(index, 0)*grid_points(index, 1);
-                        point2(8) = grid_points(index, 1)*grid_points(index, 2);
-                        point2(9) = grid_points(index, 0)*grid_points(index, 2);
+                            point2(7) = grid_points(index, 0)*grid_points(index, 1);
+                            point2(8) = grid_points(index, 1)*grid_points(index, 2);
+                            point2(9) = grid_points(index, 0)*grid_points(index, 2);
+                        }
                     }
 
                     grid_values[index] = point2.dot(c);
