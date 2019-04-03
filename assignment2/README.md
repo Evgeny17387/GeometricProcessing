@@ -27,16 +27,21 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ![alt text](Images/Q_3/Sphere_Res_15_WR_0.1_Epsilon_0.01_PD_1_SF_1.JPG "Title")
 
 #### Cat:<br/>
+##### Parameters: Res_20_WR_0.1_Epsilon_0.01_PD_0_SF_150 <br/>
+![alt text](Images/Q_3/Cat_Res_20_WR_0.1_Epsilon_0.01_PD_0_SF_150.JPG "Title")
 ##### Parameters: Res_20_WR_0.1_Epsilon_0.01_PD_1_SF_150 <br/>
 ![alt text](Images/Q_3/Cat_Res_20_WR_0.1_Epsilon_0.01_PD_1_SF_150.JPG "Title")
-##### Parameters: Res_30_WR_0.1_Epsilon_0.01_PD_1_SF_150 <br/>
-![alt text](Images/Q_3/Cat_Res_30_WR_0.1_Epsilon_0.01_PD_1_SF_150.JPG "Title")
-##### Parameters: Res_40_WR_0.1_Epsilon_0.01_PD_1_SF_150 <br/>
-![alt text](Images/Q_3/Cat_Res_40_WR_0.1_Epsilon_0.01_PD_1_SF_150.JPG "Title")
+##### Parameters: Res_20_WR_0.1_Epsilon_0.01_PD_2_SF_150 <br/>
+![alt text](Images/Q_3/Cat_Res_20_WR_0.1_Epsilon_0.01_PD_2_SF_150.JPG "Title")
+##### Parameters: Res_30_WR_0.1_Epsilon_0.01_PD_0_SF_150 <br/>
+![alt text](Images/Q_3/Cat_Res_30_WR_0.1_Epsilon_0.01_PD_0_SF_150.JPG "Title")
+##### Parameters: Res_40_WR_0.1_Epsilon_0.01_PD_0_SF_150 <br/>
+![alt text](Images/Q_3/Cat_Res_40_WR_0.1_Epsilon_0.01_PD_0_SF_150.JPG "Title")
 
 #### Conclusions:<br/>
-##### 1. As it can be seen from the Sphere, increasing the Smoothing Factor from 0.35 to 1 has improved significantly the quality <br/>
-##### 2. As expected from the Cat, increasing the Resolution from 20 to 40 has improved significantly the quality <br/>
+##### 1. As it can be seen, from the Sphere, increasing the Smoothing Factor from 0.35 to 1 has improved significantly the quality <br/>
+##### 2. As expected, from the Cat, increasing the Resolution from 20 to 40 has improved significantly the quality <br/>
+##### 3. As surprising it is, from the Cat, Polinom Degree of 0 is bather than 1 and 2 since it leaves a lot of artifacts <br/>
 
 4) Theory question: Save your notes to assignment2/results and add a link to this page.
 
