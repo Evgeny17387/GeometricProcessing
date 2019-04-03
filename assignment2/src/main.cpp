@@ -73,12 +73,62 @@ int resolutionXRaw = 10;
 int resolutionYRaw = 10;
 int resolutionZRaw = 10;
 
+// rotation angles
+
+
 // Functions
+void rotate();
 double weightFunction(double r);
 void createGrid();
 void evaluateImplicitFunc();
 void getLines();
 bool callback_key_down(Viewer& viewer, unsigned char key, int modifiers);
+
+double theta = 0;
+double phi = 0;
+double zeta = 0;
+
+#define PI 3.14
+
+// Rotates Vertices and Normals
+void rotate() {
+
+    double cTheta = cos(theta*PI / 180);
+    double sTheta = sin(theta*PI / 180);
+
+    Eigen::Matrix3d Rx;
+
+    Rx  <<  1, 0, 0,
+            0, cTheta, -sTheta,
+            0, sTheta, cTheta;
+
+    double cPhi = cos(phi*PI / 180);
+    double sPhi = sin(phi*PI / 180);
+
+    Eigen::Matrix3d Ry;
+
+    Ry  <<  cPhi, 0, sPhi,
+            0, 1, 0,
+            -sPhi, 0, cPhi;
+
+    double cZeta = cos(zeta*PI / 180);
+    double sZeta = sin(zeta*PI / 180);
+
+    Eigen::Matrix3d Rz;
+
+    Rz  <<  cZeta, -sZeta, 0,
+            sZeta, cZeta, 0,
+            0, 0, 1;
+
+    for (int i = 0; i < P.rows(); i++) {
+        P.row(i) =  P.row(i) * Rx * Ry * Rz;
+    }
+
+    for (int i = 0; i < N.rows(); i++) {
+        N.row(i) = N.row(i) * Rx * Ry * Rz;
+    }
+
+}
 
 // Wendland weight function
 double weightFunction(double r) {
@@ -449,7 +499,7 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         evaluateImplicitFunc();
 
         // get grid lines
-//        getLines();
+        getLines();
 
         // Code for coloring and displaying the grid points and lines
         // Assumes that grid_values and grid_points have been correctly assigned.
@@ -471,7 +521,7 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
         viewer.data().point_size = 8;
         viewer.data().add_points(grid_points, grid_colors);
 
-//       viewer.data().add_edges(grid_lines.block(0, 0, grid_lines.rows(), 3), grid_lines.block(0, 3, grid_lines.rows(), 3), Eigen::RowVector3d(0.8, 0.8, 0.8));
+       viewer.data().add_edges(grid_lines.block(0, 0, grid_lines.rows(), 3), grid_lines.block(0, 3, grid_lines.rows(), 3), Eigen::RowVector3d(0.8, 0.8, 0.8));
 
         /*** end: sphere example ***/
     }
@@ -552,12 +602,18 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
+            rotate();
+
             callback_key_down(viewer, '1', 0);
         }
 
         ImGui::InputInt("Resolution-X-index", &resolutionXRaw, 0, 0);
         ImGui::InputInt("Resolution-Y-index", &resolutionYRaw, 0, 0);
         ImGui::InputInt("Resolution-Z-index", &resolutionZRaw, 0, 0);
+
+        ImGui::InputDouble("Theta", &theta, 0, 0);
+        ImGui::InputDouble("Phi", &phi, 0, 0);
+        ImGui::InputDouble("Zeta", &zeta, 0, 0);
 
       }
 
