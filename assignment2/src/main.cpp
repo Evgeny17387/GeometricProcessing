@@ -8,6 +8,7 @@
 #include <igl/copyleft/marching_cubes.h>
 
 #define MAX_INT 0xFFFFFFFF
+#define EPSILON 0.00000001
 
 using namespace std;
 using Viewer = igl::opengl::glfw::Viewer;
@@ -65,6 +66,12 @@ Eigen::MatrixXi F;
 
 // Output: face normals of the reconstructed mesh, #F x3
 Eigen::MatrixXd FN;
+
+// another grid parameters
+list<int> * constrained_grid_points = NULL;
+int resolutionXRaw = 10;
+int resolutionYRaw = 10;
+int resolutionZRaw = 10;
 
 // Functions
 double weightFunction(double r);
@@ -177,62 +184,87 @@ void evaluateImplicitFunc() {
                 Eigen::MatrixXd f;
                 Eigen::MatrixXd w;
 
-                
-
                 A.resize(0, AColSize);
                 f.resize(0, 1);
                 w.resize(0, 0);
 
                 // Searching closest neighbors
 
-                for (int i = 0; i < constrained_points.rows(); i++) {
+                int xRaw = floor(((abs(bb_min(0)) + grid_points(index, 0)) / dim[0])*resolutionXRaw);
+                int yRaw = floor(((abs(bb_min(1)) + grid_points(index, 1)) / dim[1])*resolutionYRaw);
+                int zRaw = floor(((abs(bb_min(2)) + grid_points(index, 2)) / dim[2])*resolutionZRaw);
 
-                    Eigen::RowVector3d point3;
+                for (int x = xRaw - 1; x < xRaw + 2; x++) {
 
-                    point3(0) = constrained_points(i, 0);
-                    point3(1) = constrained_points(i, 1);
-                    point3(2) = constrained_points(i, 2);
-
-                    Eigen::RowVector3d diff = point1 - point3;
-
-                    double distance = sqrt(pow(diff(0), 2) + pow(diff(1), 2) + pow(diff(2), 2));
-
-                    if (distance < wendlandRadius) {
-
-                        A.conservativeResize(A.rows() + 1, AColSize);
-                        f.conservativeResize(f.rows() + 1, 1);
-                        w.conservativeResize(w.rows() + 1, w.rows() + 1);
-
-                        // Update A
-
-                        A(A.rows()-1, 0) = 1;
-                        for (int j = 0; j < 3; j++) {
-                            A(A.rows() - 1, j + 1) = constrained_points(i, j);
-                        }
-                        if (polyDegree == 2) {
-                            A(A.rows() - 1, 4) = constrained_points(i, 0)*constrained_points(i, 0);
-                            A(A.rows() - 1, 5) = constrained_points(i, 1)*constrained_points(i, 1);
-                            A(A.rows() - 1, 6) = constrained_points(i, 2)*constrained_points(i, 2);
-
-                            A(A.rows() - 1, 7) = constrained_points(i, 0)*constrained_points(i, 1);
-                            A(A.rows() - 1, 8) = constrained_points(i, 1)*constrained_points(i, 2);
-                            A(A.rows() - 1, 9) = constrained_points(i, 0)*constrained_points(i, 2);
-                        }
-
-                        // Update f
-
-                        f(f.rows()-1, 0) = constrained_values(i, 0);
-
-                        // Update w
-
-                        for (int j = 0; j < w.rows(); j++) {
-                            w(j, w.rows() - 1) = 0;
-                            w(w.rows() - 1, j) = 0;
-                        }
-                        w(w.rows()-1, w.rows() - 1) = weightFunction(distance);
-
+                    if (x < 0 || x >= resolutionXRaw) {
+                        continue;
                     }
 
+                    for (int y = yRaw - 1; y < yRaw + 2; y++) {
+
+                        if (y < 0 || y >= resolutionYRaw) {
+                            continue;
+                        }
+
+                        for (int z = zRaw - 1; z < zRaw + 2; z++) {
+
+                            if (z < 0 || z >= resolutionZRaw) {
+                                continue;
+                            }
+
+                            int indexRaw = x + resolutionXRaw * (y + resolutionYRaw * z);
+
+                            for (int i : constrained_grid_points[indexRaw]) {
+
+                                Eigen::RowVector3d point3;
+
+                                point3(0) = constrained_points(i, 0);
+                                point3(1) = constrained_points(i, 1);
+                                point3(2) = constrained_points(i, 2);
+
+                                Eigen::RowVector3d diff = point1 - point3;
+
+                                double distance = sqrt(pow(diff(0), 2) + pow(diff(1), 2) + pow(diff(2), 2));
+
+                                if (distance < wendlandRadius) {
+
+                                    A.conservativeResize(A.rows() + 1, AColSize);
+                                    f.conservativeResize(f.rows() + 1, 1);
+                                    w.conservativeResize(w.rows() + 1, w.rows() + 1);
+
+                                    // Update A
+
+                                    A(A.rows() - 1, 0) = 1;
+                                    for (int j = 0; j < 3; j++) {
+                                        A(A.rows() - 1, j + 1) = constrained_points(i, j);
+                                    }
+                                    if (polyDegree == 2) {
+                                        A(A.rows() - 1, 4) = constrained_points(i, 0)*constrained_points(i, 0);
+                                        A(A.rows() - 1, 5) = constrained_points(i, 1)*constrained_points(i, 1);
+                                        A(A.rows() - 1, 6) = constrained_points(i, 2)*constrained_points(i, 2);
+
+                                        A(A.rows() - 1, 7) = constrained_points(i, 0)*constrained_points(i, 1);
+                                        A(A.rows() - 1, 8) = constrained_points(i, 1)*constrained_points(i, 2);
+                                        A(A.rows() - 1, 9) = constrained_points(i, 0)*constrained_points(i, 2);
+                                    }
+
+                                    // Update f
+
+                                    f(f.rows() - 1, 0) = constrained_values(i, 0);
+
+                                    // Update w
+
+                                    for (int j = 0; j < w.rows(); j++) {
+                                        w(j, w.rows() - 1) = 0;
+                                        w(w.rows() - 1, j) = 0;
+                                    }
+                                    w(w.rows() - 1, w.rows() - 1) = weightFunction(distance);
+
+                                }
+
+                            }
+                        }
+                    }
                 }
 
                 if (A.rows() != 0) {
@@ -323,11 +355,10 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
     }
 
     if (key == '2') {
+
         // Show all constraints
         viewer.data().clear();
         viewer.core.align_camera_center(P);
-
-        // Add your code for computing auxiliary constraint points here
 
         // Bounding box dimensions
         Eigen::RowVector3d bb_min, bb_max;
@@ -342,6 +373,14 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
 
         Eigen::MatrixXd colors_per_face;
         colors_per_face.setZero(3 * P.rows(), 3);
+        
+        // Constrain points grid
+
+        if (constrained_grid_points != NULL) {
+            delete[] constrained_grid_points;
+        }
+
+        constrained_grid_points = new list<int>[resolutionXRaw * resolutionYRaw * resolutionZRaw];
 
         for (int i = 0; i < P.rows(); i++) {
 
@@ -356,6 +395,38 @@ bool callback_key_down(Viewer &viewer, unsigned char key, int modifiers) {
             constrained_points.row(3 * i + 2)   = P.row(i) - epsilon * N.row(i);
             constrained_values(3 * i + 2, 0)    = -epsilon;
             colors_per_face.row(3 * i + 2)      = Eigen::RowVector3d(0, 1, 0);
+
+            // add constrain point to raw grid
+
+            int x = floor(((abs(bb_min(0)) + P(i, 0))/dim[0])*resolutionXRaw);
+            if (x < 0) {
+                x = 0;
+            }
+            else if (x >= resolutionXRaw) {
+                x = resolutionXRaw - 1;
+            }
+
+            int y = floor(((abs(bb_min(1)) + P(i, 1))/dim[1])*resolutionYRaw);
+            if (y < 0) {
+                y = 0;
+            }
+            else if (y >= resolutionYRaw) {
+                y = resolutionYRaw - 1;
+            }
+
+            int z = floor(((abs(bb_min(2)) + P(i, 2))/dim[2])*resolutionZRaw);
+            if (z < 0) {
+                z = 0;
+            }
+            else if (z >= resolutionZRaw) {
+                z = resolutionZRaw - 1;
+            }
+
+            int index = x + resolutionXRaw * (y + resolutionYRaw * z);
+
+            constrained_grid_points[index].push_back(3 * i);
+            constrained_grid_points[index].push_back(3 * i + 1);
+            constrained_grid_points[index].push_back(3 * i + 2);
 
         }
 
@@ -483,6 +554,10 @@ int main(int argc, char *argv[]) {
 
             callback_key_down(viewer, '1', 0);
         }
+
+        ImGui::InputInt("Resolution-X-index", &resolutionXRaw, 0, 0);
+        ImGui::InputInt("Resolution-Y-index", &resolutionYRaw, 0, 0);
+        ImGui::InputInt("Resolution-Z-index", &resolutionZRaw, 0, 0);
 
       }
 
