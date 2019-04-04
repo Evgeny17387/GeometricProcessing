@@ -48,6 +48,10 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ##### Parameters: Res_40_WR_0.05_Epsilon_0.01_PD_0_SF_10 <br/>
 ![alt text](Images/Q_3/Luigi_Res_40_WR_0.05_Epsilon_0.01_PD_0_SF_10.JPG "Title")
 
+#### Horse:<br/>
+##### Parameters: Horse_30_WR_0.02_Epsilon_0.01_PD_0_SF_1 <br/>
+![alt text](Images/Q_3/Horse_Res_30_WR_0.02_Epsilon_0.01_PD_0_SF_1.JPG "Title")
+
 #### Conclusions:<br/>
 ##### 1. As it can be seen, from the Sphere, increasing the Smoothing Factor from 0.35 to 1 has improved significantly the quality but as be seen, from the Cat, to high Smoothing Factor is also bad <br/>
 ##### 2. As expected, from the Cat, increasing the Resolution from 20 to 50 has improved significantly the quality, using high resolution is possible only because of the Spatial Index <br/>
