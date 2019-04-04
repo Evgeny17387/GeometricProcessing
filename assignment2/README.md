@@ -60,6 +60,7 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ##### 1. As it can be seen, from the Sphere, increasing the Smoothing Factor from 0.35 to 1 has improved significantly the quality but as be seen, from the Cat, to high Smoothing Factor is also bad <br/>
 ##### 2. As expected, from the Cat, increasing the Resolution from 20 to 50 has improved significantly the quality, using high resolution is possible only because of the Spatial Index <br/>
 ##### 3. As surprising it is, from the Cat, Polinom Degree of 0 is bather than 1 and 2 since it leaves a lot of artifacts and cats the ears of the cat <br/>
+##### 4. For anisotropic objects (Luigi image 3), such as Luigi, it was possible to use higher resolution in Y-axis and lower resolution in X,Z-axis, and get a very high resolution, thanks to spatial index <br/>
 
 4) Theory question: Save your notes to assignment2/results and add a link to this page.
 ##### Answer can be found here
