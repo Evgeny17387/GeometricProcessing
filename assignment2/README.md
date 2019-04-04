@@ -55,7 +55,7 @@ Edit this 'README.md' file to report all your results. There is no need to write
 
 4) Theory question: Save your notes to assignment2/results and add a link to this page.
 ##### Answer can be found here
-![alt text](Results/Q_4/Q_4.docx "Title")
+![a relative link](Results/Q_4)
 
 ### Optional Tasks
 
