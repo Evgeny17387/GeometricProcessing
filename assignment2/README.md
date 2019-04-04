@@ -54,6 +54,8 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ##### 3. As surprising it is, from the Cat, Polinom Degree of 0 is bather than 1 and 2 since it leaves a lot of artifacts and cats the ears of the cat <br/>
 
 4) Theory question: Save your notes to assignment2/results and add a link to this page.
+##### Answer can be found here
+![alt text](Results/Q_4/Q_4.docx "Title")
 
 ### Optional Tasks
 

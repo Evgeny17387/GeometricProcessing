@@ -609,6 +609,18 @@ int main(int argc, char *argv[]) {
             case 3:
                 igl::readOFF("../data/luigi.off", P, F, N);
                 break;
+            case 4:
+                igl::readOFF("../data/hound.off", P, F, N);
+                break;
+            case 5:
+                igl::readOFF("../data/horse.off", P, F, N);
+                break;
+            case 6:
+                igl::readOFF("../data/bunny-500.off", P, F, N);
+                break;
+            case 7:
+                igl::readOFF("../data/bunny-1000.off", P, F, N);
+                break;
             }
 
             rotate();
