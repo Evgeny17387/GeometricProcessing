@@ -47,6 +47,8 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ![alt text](Images/Q_3/Luigi_Res_30_WR_0.05_Epsilon_0.01_PD_0_SF_10.JPG "Title")
 ##### Parameters: Res_40_WR_0.05_Epsilon_0.01_PD_0_SF_10 <br/>
 ![alt text](Images/Q_3/Luigi_Res_40_WR_0.05_Epsilon_0.01_PD_0_SF_10.JPG "Title")
+##### Parameters: Res_50_100_50_WR_0.05_Epsilon_0.01_PD_0_SF_10 <br/>
+![alt text](Images/Q_3/Luigi_Res_50_100_50_WR_0.05_Epsilon_0.01_PD_0_SF_10.JPG "Title")
 
 #### Horse:<br/>
 ##### Parameters: Horse_30_WR_0.02_Epsilon_0.01_PD_0_SF_1 <br/>
