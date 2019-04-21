@@ -125,6 +125,56 @@ void ConvertConstraintsToMatrixForm(VectorXi indices, MatrixXd positions, Eigen:
 {
 	// Convert the list of fixed indices and their fixed positions to a linear system
 	// Hint: The matrix C should contain only one non-zero element per row and d should contain the positions in the correct order.
+
+    C.resize(2 * indices.rows(), 2);
+    d.resize(2 * indices.rows(), 1);
+
+    C.setZero();
+
+    for (int i = 0; i < indices.rows(); i++) {
+
+        C.insert(i * 2, 0) = 1;
+        C.insert(i * 2, 1) = 0;
+
+        C.insert(i * 2 + 1, 0) = 0;
+        C.insert(i * 2 + 1, 1) = 1;
+
+        d(i * 2, 0) = positions(i, 0);
+        d(i * 2 + 1, 0) = positions(i, 1);
+
+    }
+
+}
+
+void printVectorOfVectors(std::vector<std::vector<int>> VF) {
+    int i = -1;
+    for (auto vector1 : VF) {
+        printf("%d:", ++i);
+        for (auto vector2 : vector1) {
+            printf(" %d", vector2);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void printVectorXi(VectorXi vectorXi) {
+    for (int i = 0; i < vectorXi.rows(); i++) {
+        printf("%d\n", vectorXi(i));
+    }
+}
+
+void printVectorXd(VectorXd MatrixXd) {
+    for (int i = 0; i < MatrixXd.rows(); i++) {
+        printf("%f\n", MatrixXd(i));
+    }
+}
+
+void printMatrixXd(MatrixXd matrixXd) {
+    for (int i = 0; i < matrixXd.rows(); i++) {
+        printf("%f ", matrixXd(i, 0));
+        printf("%f\n", matrixXd(i, 1));
+    }
 }
 
 void computeParameterization(int type)
@@ -141,7 +191,12 @@ void computeParameterization(int type)
 	{
 		// The boundary vertices should be fixed to positions on the unit disc. Find these position and
 		// save them in the #V x 2 matrix fixed_UV_position.
-	}
+
+        igl::boundary_loop(F, fixed_UV_indices);
+
+        igl::map_vertices_to_circle(V, fixed_UV_indices, fixed_UV_positions);
+
+    }
 	else
 	{
 		// Fix two UV vertices. This should be done in an intelligent way. Hint: The two fixed vertices should be the two most distant one on the mesh.
@@ -149,7 +204,11 @@ void computeParameterization(int type)
 
 	ConvertConstraintsToMatrixForm(fixed_UV_indices, fixed_UV_positions, C, d);
 
-	// Find the linear system for the parameterization (1- Tutte, 2- Harmonic, 3- LSCM, 4- ARAP)
+    printMatrixXd(fixed_UV_positions);
+    printMatrixXd(C);
+    printVectorXd(d);
+
+    // Find the linear system for the parameterization (1- Tutte, 2- Harmonic, 3- LSCM, 4- ARAP)
 	// and put it in the matrix A.
 	// The dimensions of A should be 2#V x 2#V.
 	if (type == '1') {
@@ -247,8 +306,9 @@ bool callback_init(Viewer &viewer)
 int main(int argc,char *argv[]) {
 	if(argc != 2) {
 		cout << "Usage ex3_bin <mesh.off/obj>" << endl;
-		load_mesh("../data/cathead.obj");
-	}
+//		load_mesh("../data/cathead.obj");
+        load_mesh("../data/hemisphere.off");
+    }
 	else
 	{
 		// Read points and normals
