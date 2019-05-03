@@ -121,27 +121,29 @@ static inline void SSVD2x2(const Eigen::Matrix2d& J, Eigen::Matrix2d& U, Eigen::
 	V(3) = c;
 }
 
-void ConvertConstraintsToMatrixForm(VectorXi indices, MatrixXd positions, Eigen::SparseMatrix<double> &C, VectorXd &d)
+void ConvertConstraintsToMatrixForm(VectorXi indices, MatrixXd positions, SparseMatrix<double> &C, VectorXd &d)
 {
 	// Convert the list of fixed indices and their fixed positions to a linear system
 	// Hint: The matrix C should contain only one non-zero element per row and d should contain the positions in the correct order.
 
-    C.resize(2 * indices.rows(), 2);
+    C.resize(2 * indices.rows(), 2 * V.rows());
     d.resize(2 * indices.rows(), 1);
 
     C.setZero();
 
     for (int i = 0; i < indices.rows(); i++) {
 
-        C.insert(i * 2, 0) = 1;
-        C.insert(i * 2, 1) = 0;
+        C.coeffRef(i, indices(i)) = 1;
+        C.coeffRef(indices.rows() + i, V.rows() + indices(i)) = 1;
 
-        C.insert(i * 2 + 1, 0) = 0;
-        C.insert(i * 2 + 1, 1) = 1;
+    }
 
-        d(i * 2, 0) = positions(i, 0);
-        d(i * 2 + 1, 0) = positions(i, 1);
+    for (int i = 0; i < indices.rows(); i++) {
+        d(i, 0) = positions(i, 0);
+    }
 
+    for (int i = 0; i < indices.rows(); i++) {
+        d(indices.rows() + i, 0) = positions(i, 1);
     }
 
 }
@@ -172,8 +174,10 @@ void printVectorXd(VectorXd MatrixXd) {
 
 void printMatrixXd(MatrixXd matrixXd) {
     for (int i = 0; i < matrixXd.rows(); i++) {
-        printf("%f ", matrixXd(i, 0));
-        printf("%f\n", matrixXd(i, 1));
+        for (int j = 0; j < matrixXd.cols(); j++) {
+            printf("%f ", matrixXd(i, j));
+        }
+        printf("\n");
     }
 }
 
@@ -184,9 +188,10 @@ void computeParameterization(int type)
 
 	SparseMatrix<double> A;
 	VectorXd b;
-	Eigen::SparseMatrix<double> C;
+	SparseMatrix<double> C;
 	VectorXd d;
-	// Find the indices of the boundary vertices of the mesh and put them in fixed_UV_indices
+
+    // Find the indices of the boundary vertices of the mesh and put them in fixed_UV_indices
 	if (!freeBoundary)
 	{
 		// The boundary vertices should be fixed to positions on the unit disc. Find these position and
@@ -204,22 +209,95 @@ void computeParameterization(int type)
 
 	ConvertConstraintsToMatrixForm(fixed_UV_indices, fixed_UV_positions, C, d);
 
-    printMatrixXd(fixed_UV_positions);
-    printMatrixXd(C);
-    printVectorXd(d);
+    printVectorXi(fixed_UV_indices);
+
+//    printMatrixXd(C);
+//    printf("\n");
+
+//    printVectorXd(d);
+//    printf("\n");
 
     // Find the linear system for the parameterization (1- Tutte, 2- Harmonic, 3- LSCM, 4- ARAP)
 	// and put it in the matrix A.
 	// The dimensions of A should be 2#V x 2#V.
 	if (type == '1') {
-		// Add your code for computing uniform Laplacian for Tutte parameterization
-		// Hint: use the adjacency matrix of the mesh
-	}
+        
+        // Add your code for computing uniform Laplacian for Tutte parameterization
+        // Hint: use the adjacency matrix of the mesh
+
+        SparseMatrix<double> B;
+        igl::adjacency_matrix(F, B);
+
+        SparseVector<double> Bsum;
+        igl::sum(B, 1, Bsum);
+
+        SparseMatrix<double> D;
+        igl::diag(Bsum, D);
+
+        SparseMatrix<double> DInverse;
+        DInverse.resize(D.rows(), D.cols());
+        DInverse.setZero();
+
+        for (int i = 0; i < D.rows(); i++) {
+            DInverse.coeffRef(i, i) = 1 / D.coeffRef(i, i);
+        }
+
+//        printMatrixXd(DInverse);
+
+        SparseMatrix<double> Identity;
+        Identity.resize(D.rows(), D.cols());
+        Identity.setIdentity();
+
+//        printMatrixXd(Identity);
+
+        SparseMatrix<double> L;
+        L = Identity - DInverse * B;
+
+//        printMatrixXd(L);
+
+        SparseMatrix<double> Up;
+        SparseMatrix<double> Down;
+
+        SparseMatrix<double> Temp;
+        Temp.resize(L.rows(), L.cols());
+        Temp.setZero();
+
+        igl::cat(2, L, Temp, Up);
+        igl::cat(2, Temp, L, Down);
+        igl::cat(1, Up, Down, A);
+
+//        printMatrixXd(A);
+
+        b.resize(2 * V.rows(), 1);
+        b.setZero();
+
+    }
 
 	if (type == '2') {
 		// Add your code for computing cotangent Laplacian for Harmonic parameterization
 		// Use can use a function "cotmatrix" from libIGL, but ~~~~***READ THE DOCUMENTATION***~~~~
-	}
+
+        SparseMatrix<double> L;
+
+        igl::cotmatrix(V, F, L);
+
+        SparseMatrix<double> Up;
+        SparseMatrix<double> Down;
+
+        SparseMatrix<double> Temp;
+        Temp.resize(L.rows(), L.cols());
+        Temp.setZero();
+
+        SparseMatrix<double> LMinus = -L;
+
+        igl::cat(2, L, Temp, Up);
+        igl::cat(2, Temp, L, Down);
+        igl::cat(1, Up, Down, A);
+
+        b.resize(2 * V.rows(), 1);
+        b.setZero();
+
+    }
 
 	if (type == '3') {
 		// Add your code for computing the system for LSCM parameterization
@@ -232,20 +310,60 @@ void computeParameterization(int type)
 		// Then construct the matrix with the given rotation matrices
 	}
 
-	// Solve the linear system.
-	// Construct the system as discussed in class and the assignment sheet
-	// Use igl::cat to concatenate matrices
-	// Use Eigen::SparseLU to solve the system. Refer to tutorial 3 for more detail
+    if ((type == '1') || (type == '2') || (type == '3') || (type == '4')) {
 
-	// The solver will output a vector
-	UV.resize(V.rows(), 2);
-	//UV.col(0) =
-	//UV.col(1) =
+        // Solve the linear system.
+        // Construct the system as discussed in class and the assignment sheet
+        // Use igl::cat to concatenate matrices
+
+        SparseMatrix<double> Up;
+        SparseMatrix<double> Down;
+        SparseMatrix<double> Final;
+
+        SparseMatrix<double> CTranspose = C.transpose();
+
+        SparseMatrix<double> Temp;
+        Temp.resize(C.rows(), C.rows());
+        Temp.setZero();
+
+        igl::cat(2, A, CTranspose, Up);
+        igl::cat(2, C, Temp, Down);
+        igl::cat(1, Up, Down, Final);
+
+        VectorXd bd;
+
+        igl::cat(1, b, d, bd);
+
+        // Use Eigen::SparseLU to solve the system. Refer to tutorial 3 for more detail
+
+//        printMatrixXd(Final);
+//        printf("\n");
+
+        VectorXd x(bd.rows());
+        SparseLU<SparseMatrix<double>> solver;
+        solver.analyzePattern(Final);
+        solver.factorize(Final);
+        x = solver.solve(bd);
+
+//        printVectorXd(x);
+//        printf("\n");
+
+        // The solver will output a vector
+        UV.resize(V.rows(), 2);
+
+        for (int i = 0; i < V.rows(); i++) {
+            UV(i, 0) = x(i);
+            UV(i, 1) = x(V.rows() + i);
+        }
+
+    }
+
 }
 
 bool callback_key_pressed(Viewer &viewer, unsigned char key, int modifiers) {
 	switch (key) {
-	case '1':
+    case '0':
+    case '1':
 	case '2':
 	case '3':
 	case '4':
@@ -306,7 +424,8 @@ bool callback_init(Viewer &viewer)
 int main(int argc,char *argv[]) {
 	if(argc != 2) {
 		cout << "Usage ex3_bin <mesh.off/obj>" << endl;
-//		load_mesh("../data/cathead.obj");
+//        load_mesh("../data/Test.off");
+//		    load_mesh("../data/cathead.obj");
         load_mesh("../data/hemisphere.off");
     }
 	else
