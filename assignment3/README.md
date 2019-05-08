@@ -20,3 +20,13 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ![alt text](Results/LSCM/CatHead.JPG "Title")
 ![alt text](Results/LSCM/CatHead_UV.JPG "Title")
 ![alt text](Results/LSCM/CatHead_Deformation.JPG "Title")
+
+#### HemiShpere:<br/>
+##### Uniform Laplacian <br/>
+![alt text](Results/UL/HemiShpere.JPG "Title")
+![alt text](Results/UL/HemiShpere_UV.JPG "Title")
+![alt text](Results/UL/HemiShpere_Deformation.JPG "Title")
+##### Contangent Laplacian <br/>
+![alt text](Results/CL/HemiShpere.JPG "Title")
+![alt text](Results/CL/HemiShpere_UV.JPG "Title")
+![alt text](Results/CL/HemiShpere_Deformation.JPG "Title")

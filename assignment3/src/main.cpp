@@ -622,8 +622,8 @@ int main(int argc,char *argv[]) {
 	if(argc != 2) {
 		cout << "Usage ex3_bin <mesh.off/obj>" << endl;
 //        load_mesh("../data/Test.off");
-		    load_mesh("../data/cathead.obj");
-//        load_mesh("../data/hemisphere.off");
+//		    load_mesh("../data/cathead.obj");
+        load_mesh("../data/hemisphere.off");
     }
 	else
 	{
