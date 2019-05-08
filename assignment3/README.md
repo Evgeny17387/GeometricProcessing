@@ -52,6 +52,6 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ![alt text](Results/CL/NonConvex_Deformation.JPG "Title")
 
 #### Notes:<br/>
-##### 1. I haven't implemented the free boudnry conditions <br/>
+##### 1. I haven't implemented the free boudnry conditions (i have tried but i havr some bug in the code) <br/>
 ##### 2. Since Contangent Laplacian and LSCM give the same result for boundry conditions, i have taken images of LSCM only for the first object - CatHead <br/>
 ##### 3. As deformation index i have measured the edge length preservaation  <br/>
