@@ -623,7 +623,10 @@ int main(int argc,char *argv[]) {
 		cout << "Usage ex3_bin <mesh.off/obj>" << endl;
 //        load_mesh("../data/Test.off");
 //		    load_mesh("../data/cathead.obj");
-        load_mesh("../data/hemisphere.off");
+//        load_mesh("../data/hemisphere.off");
+        load_mesh("../data/Octo_cut2.obj");
+//        load_mesh("../data/hemisphere_non_convex_boundary.obj");
+
     }
 	else
 	{

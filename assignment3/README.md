@@ -30,3 +30,13 @@ Edit this 'README.md' file to report all your results. There is no need to write
 ![alt text](Results/CL/HemiSphere.JPG "Title")
 ![alt text](Results/CL/HemiSphere_UV.JPG "Title")
 ![alt text](Results/CL/HemiSphere_Deformation.JPG "Title")
+
+#### Octo:<br/>
+##### Uniform Laplacian <br/>
+![alt text](Results/UL/Octo.JPG "Title")
+![alt text](Results/UL/Octo_UV.JPG "Title")
+![alt text](Results/UL/Octo_Deformation.JPG "Title")
+##### Contangent Laplacian <br/>
+![alt text](Results/CL/Octo.JPG "Title")
+![alt text](Results/CL/Octo_UV.JPG "Title")
+![alt text](Results/CL/Octo_Deformation.JPG "Title")
