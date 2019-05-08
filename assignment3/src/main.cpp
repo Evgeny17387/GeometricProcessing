@@ -22,6 +22,10 @@
 #include <igl/speye.h>
 #include <igl/repdiag.h>
 #include <igl/cat.h>
+#include <igl/dijkstra.h>
+#include <igl/doublearea.h>
+
+#include <cmath>
 
 using namespace std;
 using namespace Eigen;
@@ -44,6 +48,10 @@ double TextureResolution = 10;
 igl::opengl::ViewerCore temp3D;
 igl::opengl::ViewerCore temp2D;
 
+bool isUV = false;
+bool isDeformation = false;
+int deformationMode = 0;
+
 void Redraw()
 {
 	viewer.data().clear();
@@ -53,17 +61,75 @@ void Redraw()
 		viewer.data().set_mesh(V, F);
 		viewer.data().set_face_based(false);
 
-    if(UV.size() != 0)
-    {
-      viewer.data().set_uv(TextureResolution*UV);
-      viewer.data().show_texture = true;
-    }
+        if(UV.size() != 0)
+        {
+          viewer.data().set_uv(TextureResolution*UV);
+          viewer.data().show_texture = true;
+        }
 	}
-	else
+    else
 	{
 		viewer.data().show_texture = false;
 		viewer.data().set_mesh(UV, F);
 	}
+
+    if (isUV && isDeformation) {
+
+        Eigen::MatrixXd colors_per_face;
+
+        colors_per_face.resize(F.rows(), 3);
+        colors_per_face.setZero();
+
+        double maxDeformation = 0;
+
+        for (int i = 0; i < F.rows(); i++) {
+
+            double face_color;
+
+            double deformation;
+
+            if (deformationMode == 0) {
+
+                double edge3D1 = (V.row(F(i, 0)) - V.row(F(i, 1))).norm();
+                double edge3D2 = (V.row(F(i, 1)) - V.row(F(i, 2))).norm();
+                double edge3D3 = (V.row(F(i, 2)) - V.row(F(i, 0))).norm();
+
+                double edge3DSum = edge3D1 + edge3D2 + edge3D3;
+
+                double edge2D1 = (UV.row(F(i, 0)) - UV.row(F(i, 1))).norm();
+                double edge2D2 = (UV.row(F(i, 1)) - UV.row(F(i, 2))).norm();
+                double edge2D3 = (UV.row(F(i, 2)) - UV.row(F(i, 0))).norm();
+
+                double edge2DSum = edge2D1 + edge2D2 + edge2D3;
+
+                deformation = abs(edge3DSum - edge2DSum);
+
+            }
+            else if (deformationMode == 1)
+            {
+
+                deformation = 0;
+
+            }
+
+            if (deformation > maxDeformation) {
+                maxDeformation = deformation;
+            }
+
+            colors_per_face(i, 0) = deformation;
+
+        }
+
+        for (int i = 0; i < F.rows(); i++) {
+
+            colors_per_face(i, 0) = colors_per_face(i, 0) / maxDeformation;
+
+        }
+
+        viewer.data().set_colors(colors_per_face);
+
+    }
+
 }
 
 bool callback_mouse_move(Viewer &viewer, int mouse_x, int mouse_y)
@@ -205,17 +271,69 @@ void computeParameterization(int type)
 	else
 	{
 		// Fix two UV vertices. This should be done in an intelligent way. Hint: The two fixed vertices should be the two most distant one on the mesh.
-	}
 
-	ConvertConstraintsToMatrixForm(fixed_UV_indices, fixed_UV_positions, C, d);
+        int V1;
+        int V2;
 
-    printVectorXi(fixed_UV_indices);
+        int source = 0;
+
+        set<int> targets;
+
+        vector<vector<int>> VV;
+        igl::adjacency_list(F, VV);
+
+        VectorXd min_distance;
+        VectorXd previous;
+
+        igl::dijkstra(source, targets, VV, min_distance, previous);
+
+        int max_distance = min_distance(0);
+        source = 0;
+        for (int i = 1; i < min_distance.size(); i++) {
+            if (max_distance < min_distance(i)) {
+                max_distance = min_distance(i);
+                source = i;
+            }
+        }
+
+        V1 = source;
+
+        igl::dijkstra(source, targets, VV, min_distance, previous);
+
+        max_distance = min_distance(0);
+        source = 0;
+        for (int i = 1; i < min_distance.size(); i++) {
+            if (max_distance < min_distance(i)) {
+                max_distance = min_distance(i);
+                source = i;
+            }
+        }
+
+        V2 = source;
+
+        fixed_UV_indices.resize(2, 1);
+        fixed_UV_indices(0, 0) = V1;
+        fixed_UV_indices(1, 0) = V2;
+
+        fixed_UV_positions.resize(2, 3);
+        fixed_UV_positions.row(0) = V.row(V1);
+        fixed_UV_positions.row(1) = V.row(V2);
+
+    }
+
+    if ((type == '1') || (type == '2') || (type == '3') || (type == '4')) {
+
+        ConvertConstraintsToMatrixForm(fixed_UV_indices, fixed_UV_positions, C, d);
+
+//        printVectorXi(fixed_UV_indices);
 
 //    printMatrixXd(C);
 //    printf("\n");
 
 //    printVectorXd(d);
 //    printf("\n");
+
+    }
 
     // Find the linear system for the parameterization (1- Tutte, 2- Harmonic, 3- LSCM, 4- ARAP)
 	// and put it in the matrix A.
@@ -302,7 +420,68 @@ void computeParameterization(int type)
 	if (type == '3') {
 		// Add your code for computing the system for LSCM parameterization
 		// Note that the libIGL implementation is different than what taught in the tutorial! Do not rely on it!!
-	}
+
+        // Surface gradients
+
+        SparseMatrix<double> D1;
+        SparseMatrix<double> D2;
+
+        computeSurfaceGradientMatrix(D1, D2);
+
+//        printf("D1, D2\n");
+//        printf("%d, %d\n", D1.rows(), D1.cols());
+//        printf("%d, %d\n", D2.rows(), D2.cols());
+//        printf("\n");
+
+        // Triangles area
+
+        MatrixXd AreaColumn;
+        SparseMatrix<double> AreaMatrix;
+
+        igl::doublearea(V, F, AreaColumn);
+
+//        printf("AreaColumn\n");
+//        printf("%d, %d\n", AreaColumn.rows(), AreaColumn.cols());
+//        printf("\n");
+
+        AreaMatrix.resize(AreaColumn.rows(), AreaColumn.rows());
+        AreaMatrix.setZero();
+
+        for (int i = 0; i < AreaMatrix.rows(); i++) {
+            AreaMatrix.coeffRef(i, i) = AreaColumn(i, 0);
+        }
+
+//        printf("AreaMatix\n");
+//        printMatrixXd(AreaMatrix);
+//        printf("\n");
+
+        // A
+
+        SparseMatrix<double> a;
+        SparseMatrix<double> Temp;
+
+        SparseMatrix<double> Up;
+        SparseMatrix<double> Down;
+
+        a = D1.transpose()*AreaMatrix*D1 + D2.transpose()*AreaMatrix*D2;
+        
+        Temp.resize(a.rows(), a.cols());
+        Temp.setZero();
+            
+        igl::cat(2, a, Temp, Up);
+        igl::cat(2, Temp, a, Down);
+        igl::cat(1, Up, Down, A);
+
+//        printf("A\n");
+//        printMatrixXd(A);
+//        printf("\n");
+
+        // b
+
+        b.resize(2 * V.rows(), 1);
+        b.setZero();
+
+    }
 
 	if (type == '4') {
 		// Add your code for computing ARAP system and right-hand side
@@ -310,7 +489,7 @@ void computeParameterization(int type)
 		// Then construct the matrix with the given rotation matrices
 	}
 
-    if ((type == '1') || (type == '2') || (type == '3') || (type == '4')) {
+    if ((type == '1') || (type == '2') || (type == '3')) {
 
         // Solve the linear system.
         // Construct the system as discussed in class and the assignment sheet
@@ -355,6 +534,8 @@ void computeParameterization(int type)
             UV(i, 0) = x(i);
             UV(i, 1) = x(V.rows() + i);
         }
+
+        isUV = true;
 
     }
 
@@ -447,6 +628,10 @@ int main(int argc,char *argv[]) {
 		{
 			// Expose variable directly ...
 			ImGui::Checkbox("Free boundary", &freeBoundary);
+
+            ImGui::Checkbox("Deformation", &isDeformation);
+
+            ImGui::InputInt("Deformation Mode", &deformationMode);
 
 			// TODO: Add more parameters to tweak here...
 		}
