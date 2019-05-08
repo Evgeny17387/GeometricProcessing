@@ -6,3 +6,17 @@ Edit this 'README.md' file to report all your results. There is no need to write
 
 * Screenshots of the parameterizations and textured (checkerboard) models for all the implemented methods and boundary conditions (models: cathead.obj, hemisphere.off, hemisphere_non_convex_boundary.off,Octo_cut2.obj)
 * Several examples of the distortion visualizations.
+
+#### CatHead:<br/>
+##### Uniform Laplacian <br/>
+![alt text](Results/UL/CatHead.JPG "Title")
+![alt text](Results/UL/CatHead_UV.JPG "Title")
+![alt text](Results/UL/CatHead_Deformation.JPG "Title")
+##### Contangent Laplacian <br/>
+![alt text](Results/CL/CatHead.JPG "Title")
+![alt text](Results/CL/CatHead_UV.JPG "Title")
+![alt text](Results/CL/CatHead_Deformation.JPG "Title")
+##### LSCM <br/>
+![alt text](Results/LSCM/CatHead.JPG "Title")
+![alt text](Results/LSCM/CatHead_UV.JPG "Title")
+![alt text](Results/LSCM/CatHead_Deformation.JPG "Title")

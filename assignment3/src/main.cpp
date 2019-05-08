@@ -122,7 +122,23 @@ void Redraw()
 
         for (int i = 0; i < F.rows(); i++) {
 
-            colors_per_face(i, 0) = colors_per_face(i, 0) / maxDeformation;
+            double deformationFactor = colors_per_face(i, 0) / maxDeformation;
+
+            if (deformationFactor > 0.75) {
+
+                colors_per_face(i, 0) = 0.75 + 1 - deformationFactor;
+                colors_per_face(i, 1) = 0;
+                colors_per_face(i, 2) = 0;
+
+            }
+            else
+            {
+
+                colors_per_face(i, 0) = 1;
+                colors_per_face(i, 1) = 1 - deformationFactor;
+                colors_per_face(i, 2) = 1 - deformationFactor;
+
+            }
 
         }
 
@@ -606,8 +622,8 @@ int main(int argc,char *argv[]) {
 	if(argc != 2) {
 		cout << "Usage ex3_bin <mesh.off/obj>" << endl;
 //        load_mesh("../data/Test.off");
-//		    load_mesh("../data/cathead.obj");
-        load_mesh("../data/hemisphere.off");
+		    load_mesh("../data/cathead.obj");
+//        load_mesh("../data/hemisphere.off");
     }
 	else
 	{
