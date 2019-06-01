@@ -9,11 +9,15 @@ Edit this 'README.md' file to report all your results. There is no need to write
 Provide screenshots for 4 different deformed meshes. For each example, provide a rendering of S, B, B' and S'.
 
 #### Woody<br/>
+##### S<br/>
 ![alt text](Results/Woody_S.PNG "Title")
+##### B<br/>
 ![alt text](Results/Woody_B.PNG "Title")
 
 #### Bar<br/>
+##### S<br/>
 ![alt text](Results/Bar_S.PNG "Title")
+##### B<br/>
 ![alt text](Results/Bar_B.PNG "Title")
 
 ### Optional Task
