@@ -45,6 +45,8 @@ Eigen::VectorXi handle_id(0,1);
 Eigen::VectorXi handle_vertices(0,1);
 //list of all vertices not belonging to handles, #FV x1
 Eigen::VectorXi free_vertices(0, 1);
+// fcc and fvv matrix
+SparseMatrix<double> A;
 
 //centroids of handle regions, #H x1
 Eigen::MatrixXd handle_centroids(0,3);
@@ -58,8 +60,6 @@ Eigen::Vector4f rotation(0,0,0,1.);
 typedef Eigen::Triplet<double> T;
 //per vertex color array, #V x3
 Eigen::MatrixXd vertex_colors;
-
-SparseMatrix<double> A;
 
 //function declarations (see below for implementation)
 bool solve(Viewer& viewer);
