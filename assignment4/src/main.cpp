@@ -56,6 +56,11 @@ std::vector<std::vector<int>> VV;
 // FPS measurements
 clock_t  oldTime = std::clock();
 float fps = 0;
+// Split if Matrix A
+SparseMatrix<double> A_ff;
+SparseMatrix<double> A_fc;
+// Cholesky Solver
+Eigen::SimplicialCholesky<SparseMatrix<double>, Eigen::RowMajor> solver;
 
 //centroids of handle regions, #H x1
 Eigen::MatrixXd handle_centroids(0,3);
@@ -115,24 +120,6 @@ bool solve(Viewer& viewer)
 	}
 
 	// 1.2 Removal of High Frequenicy details
-
-	int numFree = (handle_id.array() == -1).cast<int>().sum();
-	free_vertices.setZero(numFree);
-	int free_count = 0;
-	for (long vi = 0; vi < V.rows(); ++vi) {
-		if (handle_id[vi] == -1) {
-			free_vertices[free_count++] = vi;
-		}
-	}
-
-	SparseMatrix<double> A_ff;
-	igl::slice(A, free_vertices, free_vertices, A_ff);
-
-	SparseMatrix<double> A_fc;
-	igl::slice(A, free_vertices, handle_vertices, A_fc);
-
-	Eigen::SimplicialCholesky<SparseMatrix<double>, Eigen::RowMajor> solver;
-	solver.compute(A_ff);
 
 	Eigen::MatrixXd handle_vertex_positions_previous(0, 3);
 	handle_vertex_positions_previous.setZero(handle_vertex_positions.rows(), 3);
@@ -649,6 +636,24 @@ void onNewHandleID()
       handle_vertices[count++] = vi;
 
   compute_handle_centroids();
+
+  // Inorder to save computation time
+
+  free_vertices.setZero(numFree);
+  int free_count = 0;
+  for (long vi = 0; vi < V.rows(); ++vi) {
+	  if (handle_id[vi] == -1) {
+		  free_vertices[free_count++] = vi;
+	  }
+  }
+
+  igl::slice(A, free_vertices, free_vertices, A_ff);
+  igl::slice(A, free_vertices, handle_vertices, A_fc);
+
+  solver.compute(A_ff);
+
+  cout << "1" << endl;
+
 }
 
 void applySelection()
