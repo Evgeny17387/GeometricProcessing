@@ -28,9 +28,9 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 
 #### Cactus<br/>
 ##### S<br/>
-![alt text](Results/Cactus<br/>_S.PNG "Title")
+![alt text](Results/Cactus_S.PNG "Title")
 ##### B<br/>
-![alt text](Results/Cactus<br/>_B.PNG "Title")
+![alt text](Results/Cactus_B.PNG "Title")
 
 #### Note:<br/>
 ##### I didn't complete tasks 1.4 and 1.5<br/>
