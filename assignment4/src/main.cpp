@@ -325,8 +325,8 @@ int main(int argc, char *argv[])
   if(argc != 2) {
 //    load_mesh("../data/woody-lo.off");
 //	load_mesh("../data/bar.off");
-	load_mesh("../data/cactus.off");
-//  load_mesh("../data/hand.off");
+//	load_mesh("../data/cactus.off");
+  load_mesh("../data/hand.off");
   }
   else
   {
