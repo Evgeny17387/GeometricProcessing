@@ -3,8 +3,10 @@
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
 #include <igl/opengl/glfw/imgui/ImGuiHelpers.h>
 #include <imgui/imgui.h>
+#include <igl/slice.h>
 #include <igl/slice_into.h>
 #include <igl/rotate_by_quat.h>
+#include <igl/cotmatrix.h>
 
 // ...
 
@@ -41,6 +43,9 @@ Eigen::VectorXi selected_v(0,1);
 Eigen::VectorXi handle_id(0,1);
 //list of all vertices belonging to handles, #HV x1
 Eigen::VectorXi handle_vertices(0,1);
+//list of all vertices not belonging to handles, #FV x1
+Eigen::VectorXi free_vertices(0, 1);
+
 //centroids of handle regions, #H x1
 Eigen::MatrixXd handle_centroids(0,3);
 //updated positions of handle vertices, #HV x3
@@ -53,6 +58,8 @@ Eigen::Vector4f rotation(0,0,0,1.);
 typedef Eigen::Triplet<double> T;
 //per vertex color array, #V x3
 Eigen::MatrixXd vertex_colors;
+
+SparseMatrix<double> A;
 
 //function declarations (see below for implementation)
 bool solve(Viewer& viewer);
@@ -70,12 +77,51 @@ bool callback_key_down(Viewer& viewer, unsigned char key, int modifiers);
 void onNewHandleID();
 void applySelection();
 
+SparseMatrix<double> computeInverseMatrix(SparseMatrix<double> M)
+{
+	SparseLU<SparseMatrix<double>> solver;
+	solver.compute(M);
+	SparseMatrix<double> I(M.rows(), M.cols());
+	I.setIdentity();
+	auto invMatrix = solver.solve(I);
+	return invMatrix;
+}
+
 bool solve(Viewer& viewer)
 {
-  /**** Add your code for computing the deformation from handle_vertex_positions and handle_vertices here (replace following line) ****/
-  igl::slice_into(handle_vertex_positions, handle_vertices, 1, V);
+	/**** Add your code for computing the deformation from handle_vertex_positions and handle_vertices here (replace following line) ****/
 
-  return true;
+	// 1.2 Removal of High Frequenicy details
+
+	int numFree = (handle_id.array() == -1).cast<int>().sum();
+	free_vertices.setZero(numFree);
+	int free_count = 0;
+	for (long vi = 0; vi < V.rows(); ++vi) {
+		if (handle_id[vi] == -1) {
+			free_vertices[free_count++] = vi;
+		}
+	}
+
+	SparseMatrix<double> A_ff;
+	igl::slice(A, free_vertices, free_vertices, A_ff);
+
+	SparseMatrix<double> A_fc;
+	igl::slice(A, free_vertices, handle_vertices, A_fc);
+
+	Eigen::SimplicialCholesky<SparseMatrix<double>, Eigen::RowMajor> solver;
+	solver.compute(A_ff);
+	Eigen::MatrixXd b = -1 * A_fc * handle_vertex_positions;
+	MatrixXd v_f = solver.solve(b);
+
+	igl::slice_into(v_f, free_vertices, 1, V);
+
+	// 1.3 Deformation of the smoth mesh
+
+	// 1.4 Transferring high-frequecny details to the deformed surface
+
+	// 1.5 Real-Time perofrmance
+
+	return true;
 };
 
 void get_new_handle_locations()
@@ -128,6 +174,20 @@ int main(int argc, char *argv[])
   {
     load_mesh(argv[1]);
   }
+
+  // Compute Mass matrix
+
+  SparseMatrix<double> M;
+  igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_DEFAULT, M);
+
+  // Compute Contangent matrix
+
+  SparseMatrix<double> L_w;
+  igl::cotmatrix(V, F, L_w);
+
+  // Compute A matrix
+
+  A = L_w * computeInverseMatrix(M) * L_w;
 
   igl::opengl::glfw::imgui::ImGuiMenu menu;
   viewer.plugins.push_back(&menu);

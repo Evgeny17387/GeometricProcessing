@@ -8,6 +8,10 @@ Edit this 'README.md' file to report all your results. There is no need to write
 
 Provide screenshots for 4 different deformed meshes. For each example, provide a rendering of S, B, B' and S'.
 
+#### Woody<br/>
+![alt text](Results/Woody_S.JPG "Title")
+![alt text](Results/Woody_B.JPG "Title")
+
 ### Optional Task
 
 Discuss and show the differences to the results from the previous task. 
