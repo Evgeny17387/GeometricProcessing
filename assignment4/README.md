@@ -19,7 +19,7 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 ![alt text](Results/Woody_S'.PNG "Title")
 
 #### Note:<br/>
-##### I Haven't done tasks 1.4 and 1.5<br/>
+##### The PFS can be seen in the buttom of the controls bar<br/>
 
 ### Optional Task
 
