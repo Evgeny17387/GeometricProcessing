@@ -18,36 +18,6 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 ##### S'<br/>
 ![alt text](Results/Woody_S'.PNG "Title")
 
-#### Bar<br/>
-##### S<br/>
-![alt text](Results/Bar_S.PNG "Title")
-##### B<br/>
-![alt text](Results/Bar_B.PNG "Title")
-##### B'<br/>
-![alt text](Results/Bar_B'.PNG "Title")
-##### S'<br/>
-![alt text](Results/Bar_S'.PNG "Title")
-
-#### Cactus<br/>
-##### S<br/>
-![alt text](Results/Cactus_S.PNG "Title")
-##### B<br/>
-![alt text](Results/Cactus_B.PNG "Title")
-##### B'<br/>
-![alt text](Results/Cactus_B'.PNG "Title")
-##### S'<br/>
-![alt text](Results/Cactus_S'.PNG "Title")
-
-#### Hand<br/>
-##### S<br/>
-![alt text](Results/Hand_S.PNG "Title")
-##### B<br/>
-![alt text](Results/Hand_B.PNG "Title")
-##### B'<br/>
-![alt text](Results/Hand_B'.PNG "Title")
-##### S'<br/>
-![alt text](Results/Hand_S'.PNG "Title")
-
 #### Note:<br/>
 ##### I Haven't done tasks 1.4 and 1.5<br/>
 

@@ -7,7 +7,9 @@
 #include <igl/slice_into.h>
 #include <igl/rotate_by_quat.h>
 #include <igl/cotmatrix.h>
-
+#include <igl/per_vertex_normals.h>
+#include <igl/cross.h>
+#include <ctime>
 // ...
 
 #include "Lasso.h"
@@ -48,7 +50,12 @@ Eigen::VectorXi free_vertices(0, 1);
 // fcc and fvv matrix
 SparseMatrix<double> A;
 // Deformation mesh selector
-int Deformation = 0;
+int Deformation = 3;
+// For step 1.4 calculations
+std::vector<std::vector<int>> VV;
+// FPS measurements
+clock_t  oldTime = std::clock();
+float fps = 0;
 
 //centroids of handle regions, #H x1
 Eigen::MatrixXd handle_centroids(0,3);
@@ -96,6 +103,11 @@ SparseMatrix<double> Inverse(SparseMatrix<double> A)
 
 bool solve(Viewer& viewer)
 {
+
+	std::clock_t newTime = std::clock();
+	fps = 1.0 / ((newTime - oldTime) / (double)CLOCKS_PER_SEC);
+	oldTime = newTime;
+
 	/**** Add your code for computing the deformation from handle_vertex_positions and handle_vertices here (replace following line) ****/
 
 	if (Deformation == 0) {
@@ -136,8 +148,71 @@ bool solve(Viewer& viewer)
 	Eigen::MatrixXd b = -1 * A_fc * handle_vertex_positions_previous;
 	MatrixXd v_f = solver.solve(b);
 
+	Eigen::MatrixXd V_S(V.rows(), 3);
+	V_S = V;
+
 	igl::slice_into(v_f, free_vertices, 1, V);
-	
+
+	Eigen::MatrixXd V_B(V.rows(), 3);
+	V_B = V;
+
+	Eigen::MatrixXd d(V.rows(), 3);
+	d = V_S - V_B;
+
+	Eigen::MatrixXd n;
+	igl::per_vertex_normals(V_B, F, n);
+
+	Eigen::MatrixXd x(0, 3);
+	x.setZero(V.rows(), 3);
+
+	Eigen::MatrixXd y(0, 3);
+	y.setZero(V.rows(), 3);
+
+	for (int i = 0; i < V.rows(); i++) {
+
+		Eigen::RowVector3d Vi = V_B.row(i);
+
+		Eigen::RowVector3d ni = n.row(i);
+		ni.normalize();
+
+		for (int j : VV[i]) {
+
+			Eigen::RowVector3d Vj = V_B.row(j);
+
+			Eigen::RowVector3d Vj_temp1;
+			igl::cross(Vj, ni, Vj_temp1);
+			Vj_temp1.normalize();
+
+			Eigen::RowVector3d Vj_temp2;
+			igl::cross(ni, Vj_temp1, Vj_temp2);
+			Vj_temp2.normalize();
+
+			Eigen::RowVector3d Vj_proj = Vj_temp2 * Vj.dot(Vj_temp2);
+
+			if (Vj_proj.norm() > x.row(i).norm()) {
+				x.row(i) = Vj_proj;
+			}
+
+		}
+
+		Eigen::RowVector3d xi;
+		xi = x.row(i);
+		xi.normalize();
+		x.row(i) = xi;
+
+		Eigen::RowVector3d yi;
+		igl::cross(ni, xi, yi);
+		
+		y.row(i) = yi;
+
+		Eigen::RowVector3d di;
+		di = d.row(i);
+
+		di = di.dot(xi) * xi + di.dot(yi) * yi + di.dot(ni) * ni;
+		d.row(i) = di;
+
+	}
+
 	if (Deformation == 1) {
 		return true;
 	}
@@ -150,11 +225,70 @@ bool solve(Viewer& viewer)
 	igl::slice_into(v_f, free_vertices, 1, V);
 	igl::slice_into(handle_vertex_positions, handle_vertices, 1, V);
 
+	Eigen::MatrixXd V_B_tag(V.rows(), 3);
+	V_B_tag = V;
+
+	Eigen::MatrixXd n_tag;
+	igl::per_vertex_normals(V_B_tag, F, n_tag);
+
+	Eigen::MatrixXd x_tag(0, 3);
+	x_tag.setZero(V.rows(), 3);
+
+	Eigen::MatrixXd y_tag(0, 3);
+	y_tag.setZero(V.rows(), 3);
+
+	for (int i = 0; i < V.rows(); i++) {
+
+		Eigen::RowVector3d Vi = V_B_tag.row(i);
+
+		Eigen::RowVector3d ni = n_tag.row(i);
+		ni.normalize();
+
+		for (int j : VV[i]) {
+
+			Eigen::RowVector3d Vj = V_B_tag.row(j);
+
+			Eigen::RowVector3d Vj_temp1;
+			igl::cross(Vj, ni, Vj_temp1);
+			Vj_temp1.normalize();
+
+			Eigen::RowVector3d Vj_temp2;
+			igl::cross(ni, Vj_temp1, Vj_temp2);
+			Vj_temp2.normalize();
+
+			Eigen::RowVector3d Vj_proj = Vj_temp2 * Vj.dot(Vj_temp2);
+
+			if (Vj_proj.norm() > x_tag.row(i).norm()) {
+				x_tag.row(i) = Vj_proj;
+			}
+
+		}
+
+		Eigen::RowVector3d xi;
+		xi = x_tag.row(i);
+		xi.normalize();
+		x_tag.row(i) = xi;
+
+		Eigen::RowVector3d yi;
+		igl::cross(ni, xi, yi);
+
+		y_tag.row(i) = yi;
+
+		Eigen::RowVector3d di;
+		di = d.row(i);
+
+		di = di.dot(xi) * xi + di.dot(yi) * yi + di.dot(ni) * ni;
+		d.row(i) = di;
+
+	}
+
 	if (Deformation == 2) {
 		return true;
 	}
 
 	// 1.4 Transferring high-frequecny details to the deformed surface
+
+	V = V_B_tag + d;
 
 	return true;
 };
@@ -226,6 +360,8 @@ int main(int argc, char *argv[])
 
   A = L_w * Inverse(M) * L_w;
 
+  igl::adjacency_list(F, VV);
+
   igl::opengl::glfw::imgui::ImGuiMenu menu;
   viewer.plugins.push_back(&menu);
 
@@ -260,6 +396,8 @@ int main(int argc, char *argv[])
           }
 
 		  ImGui::InputInt("Deformation", &Deformation, 0, 0);
+
+		  ImGui::InputFloat("FPS", &fps, 0, 0);
 	}
   };
 
@@ -375,7 +513,7 @@ bool callback_mouse_up(Viewer& viewer, int button, int modifier)
 
 bool callback_pre_draw(Viewer& viewer)
 {
-  // initialize vertex colors
+	// initialize vertex colors
   vertex_colors = Eigen::MatrixXd::Constant(V.rows(),3,.9);
 
   // first, color constraints
