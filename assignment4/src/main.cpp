@@ -115,7 +115,7 @@ bool solve(Viewer& viewer)
 
 	Eigen::SimplicialCholesky<SparseMatrix<double>, Eigen::RowMajor> solver;
 	solver.compute(A_ff);
-	Eigen::MatrixXd b = -1 * A_fc * handle_vertex_positions;
+	Eigen::MatrixXd b = -1 * A_fc * handle_vertex_positions; // why new and not old positions ?
 	MatrixXd v_f = solver.solve(b);
 
 	igl::slice_into(v_f, free_vertices, 1, V);
@@ -123,7 +123,8 @@ bool solve(Viewer& viewer)
 	// 1.3 Deformation of the smoth mesh
 
 	igl::slice_into(handle_vertex_positions, handle_vertices, 1, V);
-	MatrixXd transformed_positions = solver.solve(-1 * A_fc * handle_vertex_positions);
+	b = -1 * A_fc * handle_vertex_positions;
+	MatrixXd transformed_positions = solver.solve(b);
 	igl::slice_into(transformed_positions, free_vertices, 1, V);
 
 	// 1.4 Transferring high-frequecny details to the deformed surface
