@@ -14,7 +14,7 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 
 #### Bar<br/>
 ![alt text](Results/Bar_S.PNG "Title")
-![alt text](Results/Hand_B.PNG "Title")
+![alt text](Results/Bar_B.PNG "Title")
 
 ### Optional Task
 
