@@ -122,6 +122,10 @@ bool solve(Viewer& viewer)
 
 	// 1.3 Deformation of the smoth mesh
 
+	igl::slice_into(handle_vertex_positions, handle_vertices, 1, V);
+	MatrixXd transformed_positions = solver.solve(-1 * A_fc * handle_vertex_positions);
+	igl::slice_into(transformed_positions, free_vertices, 1, V);
+
 	// 1.4 Transferring high-frequecny details to the deformed surface
 
 	// 1.5 Real-Time perofrmance

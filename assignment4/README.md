@@ -13,6 +13,8 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 ![alt text](Results/Woody_S.PNG "Title")
 ##### B<br/>
 ![alt text](Results/Woody_B.PNG "Title")
+##### B'<br/>
+![alt text](Results/Woody_B'.PNG "Title")
 
 #### Bar<br/>
 ##### S<br/>
