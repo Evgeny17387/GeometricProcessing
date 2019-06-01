@@ -12,6 +12,10 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 ![alt text](Results/Woody_S.PNG "Title")
 ![alt text](Results/Woody_B.PNG "Title")
 
+#### Bar<br/>
+![alt text](Results/Bar_S.PNG "Title")
+![alt text](Results/Hand_B.PNG "Title")
+
 ### Optional Task
 
 Discuss and show the differences to the results from the previous task. 
