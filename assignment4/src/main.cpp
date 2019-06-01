@@ -47,6 +47,8 @@ Eigen::VectorXi handle_vertices(0,1);
 Eigen::VectorXi free_vertices(0, 1);
 // fcc and fvv matrix
 SparseMatrix<double> A;
+// Deformation mesh selector
+int Deformation = 0;
 
 //centroids of handle regions, #H x1
 Eigen::MatrixXd handle_centroids(0,3);
@@ -96,6 +98,10 @@ bool solve(Viewer& viewer)
 {
 	/**** Add your code for computing the deformation from handle_vertex_positions and handle_vertices here (replace following line) ****/
 
+	if (Deformation == 0) {
+		return true;
+	}
+
 	// 1.2 Removal of High Frequenicy details
 
 	int numFree = (handle_id.array() == -1).cast<int>().sum();
@@ -115,21 +121,40 @@ bool solve(Viewer& viewer)
 
 	Eigen::SimplicialCholesky<SparseMatrix<double>, Eigen::RowMajor> solver;
 	solver.compute(A_ff);
-	Eigen::MatrixXd b = -1 * A_fc * handle_vertex_positions; // why new and not old positions ?
+
+	Eigen::MatrixXd handle_vertex_positions_previous(0, 3);
+	handle_vertex_positions_previous.setZero(handle_vertex_positions.rows(), 3);
+	int count = 0;
+	for (long vi = 0; vi < V.rows(); ++vi) {
+		if (handle_id[vi] >= 0)
+		{
+			Eigen::RowVector3f previousePosition = V.row(vi).cast<float>();
+			handle_vertex_positions_previous.row(count++) = previousePosition.cast<double>();
+		}
+	}
+
+	Eigen::MatrixXd b = -1 * A_fc * handle_vertex_positions_previous;
 	MatrixXd v_f = solver.solve(b);
 
 	igl::slice_into(v_f, free_vertices, 1, V);
+	
+	if (Deformation == 1) {
+		return true;
+	}
 
 	// 1.3 Deformation of the smoth mesh
 
-	igl::slice_into(handle_vertex_positions, handle_vertices, 1, V);
 	b = -1 * A_fc * handle_vertex_positions;
-	MatrixXd transformed_positions = solver.solve(b);
-	igl::slice_into(transformed_positions, free_vertices, 1, V);
+	v_f = solver.solve(b);
+
+	igl::slice_into(v_f, free_vertices, 1, V);
+	igl::slice_into(handle_vertex_positions, handle_vertices, 1, V);
+
+	if (Deformation == 2) {
+		return true;
+	}
 
 	// 1.4 Transferring high-frequecny details to the deformed surface
-
-	// 1.5 Real-Time perofrmance
 
 	return true;
 };
@@ -233,7 +258,9 @@ int main(int argc, char *argv[])
           {
             handle_id.setConstant(V.rows(),1,-1);
           }
-    }
+
+		  ImGui::InputInt("Deformation", &Deformation, 0, 0);
+	}
   };
 
   viewer.callback_key_down = callback_key_down;
