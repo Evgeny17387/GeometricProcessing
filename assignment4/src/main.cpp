@@ -77,13 +77,18 @@ bool callback_key_down(Viewer& viewer, unsigned char key, int modifiers);
 void onNewHandleID();
 void applySelection();
 
-SparseMatrix<double> computeInverseMatrix(SparseMatrix<double> M)
+SparseMatrix<double> Inverse(SparseMatrix<double> A)
 {
+	// Compute inverse matrix by solving A*(A^-1)=I
+	
 	SparseLU<SparseMatrix<double>> solver;
-	solver.compute(M);
-	SparseMatrix<double> I(M.rows(), M.cols());
+	solver.compute(A);
+
+	SparseMatrix<double> I(A.rows(), A.cols());
 	I.setIdentity();
-	auto invMatrix = solver.solve(I);
+
+	SparseMatrix<double> invMatrix = solver.solve(I);
+
 	return invMatrix;
 }
 
@@ -167,8 +172,8 @@ bool load_mesh(string filename)
 int main(int argc, char *argv[])
 {
   if(argc != 2) {
-    cout << "Usage assignment4 mesh.off>" << endl;
-    load_mesh("../data/woody-lo.off");
+//    load_mesh("../data/woody-lo.off");
+	load_mesh("../data/bar.off");
   }
   else
   {
@@ -187,7 +192,7 @@ int main(int argc, char *argv[])
 
   // Compute A matrix
 
-  A = L_w * computeInverseMatrix(M) * L_w;
+  A = L_w * Inverse(M) * L_w;
 
   igl::opengl::glfw::imgui::ImGuiMenu menu;
   viewer.plugins.push_back(&menu);
