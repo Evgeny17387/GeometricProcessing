@@ -652,8 +652,6 @@ void onNewHandleID()
 
   solver.compute(A_ff);
 
-  cout << "1" << endl;
-
 }
 
 void applySelection()
