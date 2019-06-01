@@ -38,6 +38,16 @@ Provide screenshots for 4 different deformed meshes. For each example, provide a
 ##### S'<br/>
 ![alt text](Results/Cactus_S'.PNG "Title")
 
+#### Hand<br/>
+##### S<br/>
+![alt text](Results/Hand_S.PNG "Title")
+##### B<br/>
+![alt text](Results/Hand_B.PNG "Title")
+##### B'<br/>
+![alt text](Results/Hand_B'.PNG "Title")
+##### S'<br/>
+![alt text](Results/Hand_S'.PNG "Title")
+
 #### Note:<br/>
 ##### The PFS can be seen in the buttom of the controls bar<br/>
 ##### For woody it is higher then 10 fps, but for bigger meshes, it is lower<br/>
