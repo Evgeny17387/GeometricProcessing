@@ -31,6 +31,9 @@ public:
 
 		int i=0;
 		for(; i < maxIterations; i++) {
+
+			std::cout << "Iteration: " << i << std::endl;
+
 			computeSearchDirection(function, xi, dx);
 
 			if (dx.norm() < solveResidual){
@@ -56,6 +59,15 @@ protected:
 
 		// Ex. 1.1
 
+		// Init step
+
+		resize(dx, x.size());
+
+		// Assumes step = 1
+
+		function->addGradientTo(dx, x);
+		dx = -dx;
+
 	}
 
 	virtual void doLineSearch(ObjectiveFunction *function, const VectorXd& dx, VectorXd& xi)
@@ -63,9 +75,34 @@ protected:
 
 		// Ex. 1.1
 
+		// Init
+
+		double value = function->computeValue(xi);
+
+		double alphaCurrent = alpha;
+
+		double valueNew = function->computeValue(xi + alphaCurrent * dx);
+		
+		// Loop until finds right step or exceeds mac number of iterations for line search
+
+		int i = 0;
+		while ( !(valueNew < value) && (i < maxLineSearchIterations) )
+		{
+
+			alphaCurrent = alphaCurrent * beta;
+
+			valueNew = function->computeValue(xi + alphaCurrent * dx);
+
+			i++;
+
+		}
+
+		xi = xi + alphaCurrent * dx;
+
 	}
 
 protected:
+
 	double solveResidual = 1e-5;
 	int maxIterations = 100;
 	int maxLineSearchIterations = 15;
@@ -74,4 +111,8 @@ protected:
 
 	// some stats about the last time `minimize` was called
 	int lastIterations = -1;
+
+	double alpha = 1.0;
+	double beta = 0.5;
+
 };

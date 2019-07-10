@@ -4,4 +4,5 @@ Edit this 'README.md' file to report all your results. There is no need to write
 
 ## Required results
 
-See assignment!
+#### 1.1 - Gradient Descent and Line Search<br/>
+![alt text](Results/1.1.PNG "Title")
