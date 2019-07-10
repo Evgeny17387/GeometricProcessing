@@ -24,6 +24,26 @@ protected:
 
 		// Ex 1.3
 
+		// Compute Hessian
+
+		std::vector<Tripletd> hessianEntries;
+		function->addHessianEntriesTo(hessianEntries, x);
+		Eigen::SparseMatrix<double> hessian(x.rows(), x.rows());
+		hessian.setFromTriplets(hessianEntries.begin(), hessianEntries.end());
+
+		// Compute Gradient
+
+		VectorXd gradient;
+		function->addGradientTo(gradient, x);
+		gradient = -gradient;
+
+		// Solve equation
+
+		Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+		solver.compute(hessian);
+
+		dx = solver.solve(gradient);
+
 	}
 
 public:

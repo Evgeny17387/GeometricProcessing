@@ -59,13 +59,10 @@ protected:
 
 		// Ex. 1.1
 
-		// Init step
-
-		resize(dx, x.size());
+		function->addGradientTo(dx, x);
 
 		// Assumes step = 1
 
-		function->addGradientTo(dx, x);
 		dx = -dx;
 
 	}

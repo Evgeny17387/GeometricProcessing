@@ -22,6 +22,8 @@ public:
 
 		// Ex 1.1
 
+		resize(grad, x.size());
+
 		grad(0) = -2 * (a - x(0)) - 4 * b * x(0) * (x(1) - pow(x(0), 2));
 		grad(1) = 2 * b * (x(1) - pow(x(0), 2));
 
@@ -30,8 +32,14 @@ public:
 	virtual void addHessianEntriesTo(std::vector<Tripletd>& hessianEntries, const VectorXd& x) {
 
 		// Ex 1.2
-		// write d^2f/dx^2 in `hessianEntries`
-    }
+
+		hessianEntries.push_back(Tripletd(0, 0, 2 - 4 * b * x(1) + 12 * b * pow(x(0), 2)));
+		hessianEntries.push_back(Tripletd(0, 1, -4 * b * x(0)));
+		hessianEntries.push_back(Tripletd(1, 0, -4 * b * x(0)));
+		hessianEntries.push_back(Tripletd(1, 1, 2 * b));
+
+	}
 
     double a, b;
+
 };
