@@ -28,7 +28,7 @@ std::string playButtonTitle = "Play";
 
 // optimization strategy
 enum OptStrategy { GRADIENT_DESCENT, NEWTON };
-OptStrategy optStrategy = GRADIENT_DESCENT;
+OptStrategy optStrategy = NEWTON;
 
 // mouse interaction
 enum MouseMode { NONE, PIN_NODES, APPLY_FORCE };

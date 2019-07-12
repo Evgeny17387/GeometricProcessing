@@ -32,7 +32,7 @@ public:
 		int i=0;
 		for(; i < maxIterations; i++) {
 
-			std::cout << "Iteration: " << i << std::endl;
+			std::cout << "Iteration: " << i << " Energy: " << function->computeValue(xi) << std::endl;
 
 			computeSearchDirection(function, xi, dx);
 
@@ -59,11 +59,15 @@ protected:
 
 		// Ex. 1.1
 
+		// Init
+
+		resize(dx, x.size());
+		dx.setZero();
+
+		// Calculate gradient direction
+
 		function->addGradientTo(dx, x);
-
-		// Assumes step = 1
-
-		dx = -dx;
+		dx = -1 * dx;
 
 	}
 

@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
 	VectorXd x(2); x << 1.1, 1.1;
 
-#if 0
+#if 1
 	// Ex 1.1: Gradient descent
 	{
 		GradientDescentFunctionMinimizer minimizer(10000);
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	// Ex 1.3: Newton's method
-#if 1 // set to 1 for Ex 1.3
+#if 0 // set to 1 for Ex 1.3
 	{
 		NewtonFunctionMinimizer minimizer;
 
